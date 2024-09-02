@@ -133,14 +133,14 @@ export function fetchData(context, query, isGrid = false) {
             // TODO: uncomment this when fetchMaxPrice is removed
             // if (context.priceMaxValue > context.maxPrice) {
             //     context.priceMaxValue = context.maxPrice;
-            //     updateUrlParameter("max-price", context.maxPrice.toString());
+            //     updateUrlParameter(context.urlParams["max-price"], context.maxPrice.toString());
             // }
             // else if (context.priceMaxValue === 0) {
             //     context.priceMaxValue = context.maxPrice;
             // }
             // if (+context.priceMinValue !== +context.minPrice) {
             //     context.priceMinValue = context.minPrice;
-            //     updateUrlParameter("min-price", context.priceMinValue.toString());
+            //     updateUrlParameter(context.urlParams["min-price"], context.priceMinValue.toString());
             // }
             context.totalProductCount = data.result.total_count;
             context.currentProductCount = data.result.results.length;
@@ -150,11 +150,11 @@ export function fetchData(context, query, isGrid = false) {
             relativeCategories(context);
             updateBrandContainer(context);
             recentSearches(context);
-            updateUrlParameter("q", query);
+            updateUrlParameter(context.urlParams["q"], query);
             context.completedSearch = 0;
             context.page = 0;
             context.gridPage = 1;
-            removeUrlParameter("page");
+            removeUrlParameter(context.urlParams["page"]);
         })
         .catch((error) => {
             console.error("Error fetching data:", error)
@@ -203,7 +203,7 @@ export function fetchMaxPrice(context, query, isGrid = false) {
                 context.maxPrice = Math.ceil(data.result.max_price);
                 if (context.priceMaxValue > context.maxPrice) {
                     context.priceMaxValue = context.maxPrice;
-                    updateUrlParameter("max-price", context.maxPrice.toString());
+                    updateUrlParameter(context.urlParams["max-price"], context.maxPrice.toString());
                 }
                 else if (context.priceMaxValue === 0) {
                     context.priceMaxValue = context.maxPrice;

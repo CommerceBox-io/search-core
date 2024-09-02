@@ -20,7 +20,6 @@ import {
 } from './processors';
 import {debugQuery, updateMeasurerPosition,} from './domElements';
 import {Html5Qrcode} from "html5-qrcode";
-import {logPlugin} from "@babel/preset-env/lib/debug";
 
 /**
  * Initializes various properties of the SearchCore instance.
@@ -30,13 +29,27 @@ import {logPlugin} from "@babel/preset-env/lib/debug";
  * @param {string} searchPageRedirect - The search page redirect URL.
  * @param {string} segment_id - The segment ID.
  * @param {string} segment_specialty_id - The segment specialty ID.
+ * @param {object} urlParams - Url parameters
  */
-export function initializeProperties(context, layoutTemplate, externalGridSelector,  searchPageRedirect, segment_id, segment_specialty_id) {
+export function initializeProperties(context, layoutTemplate, externalGridSelector,  searchPageRedirect, segment_id, segment_specialty_id, urlParams) {
     context.layoutTemplate = layoutTemplate;
     context.externalGridSelector = externalGridSelector;
     context.searchPageRedirect = searchPageRedirect;
     context.segment_id = segment_id;
     context.segment_specialty_id = segment_specialty_id;
+
+    const defaultParams = {
+        q: "q",
+        categories: "categories",
+        scoped: "scoped",
+        brand: "brand",
+        maxPrice: "max-price",
+        minPrice: "min-price",
+        popupCategory: "popup-category"
+    }
+
+    context.urlParams = {...defaultParams, ...urlParams};
+
 
     context.data = null;
     context.suggestedWord = null;
@@ -199,8 +212,8 @@ export function initializeScopedSearchDropdown(context) {
         }
         context["scopedSearchDropdown"].addEventListener("change", () => {
             const query = context["inputElement"].value;
-            updateUrlParameter("scoped", context["scopedSearchDropdown"].value);
-            removeUrlParameter("categories");
+            updateUrlParameter(context.urlParams["scoped"], context["scopedSearchDropdown"].value);
+            removeUrlParameter(context.urlParams["categories"]);
             if (!query) return;
             context.selectedCategory = "";
             context.selectedPopupCategory = "";
@@ -222,13 +235,13 @@ export function initializeScopedSearchDropdown(context) {
  */
 export function initializeSearchFromUrl(context) {
     const urlParams = new URLSearchParams(window.location.search);
-    const q = urlParams.get("q");
-    const categories = urlParams.get("categories");
-    const scoped = urlParams.get("scoped");
-    const brand = urlParams.get("brand");
-    const maxPrice = urlParams.get("max-price");
-    const minPrice = urlParams.get("min-price");
-    const popupCategory = urlParams.get('popup-category')
+    const q = urlParams.get(context.urlParams["q"]);
+    const categories = urlParams.get(context.urlParams["categories"]);
+    const scoped = urlParams.get(context.urlParams["scoped"]);
+    const brand = urlParams.get(context.urlParams["brand"]);
+    const maxPrice = urlParams.get(context.urlParams["max-price"]);
+    const minPrice = urlParams.get(context.urlParams["min-price"]);
+    const popupCategory = urlParams.get(context.urlParams["popup-category"]);
 
     if (categories) {
         context.selectedCategory = categories;

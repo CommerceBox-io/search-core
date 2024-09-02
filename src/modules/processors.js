@@ -197,23 +197,23 @@ export function updateGridPage(context) {
     selectedFiltersContainer.className = "selected-filters";
     const selectedFilters = [
         {
-            type: "categories",
+            type: context.urlParams["categories"],
             value: context.selectedCategory
         },
         {
-            type: "brand",
+            type: context.urlParams["brand"],
             value: context.selectedBrand
         },
         {
-            type: "max-price",
+            type: context.urlParams["max-price"],
             value: context.priceMaxValue === 0 || context.priceMaxValue === context.maxPrice ? null :`${context.priceMaxValue}${context.currency}`
         },
         {
-            type: "min-price",
+            type: context.urlParams["min-price"],
             value: context.priceMinValue === 0 ? null :`${context.priceMinValue}${context.currency}`
         },
         {
-            type: "popup-category",
+            type: context.urlParams["popup-category"],
             value: context.selectedPopupCategory
         }
     ];
@@ -222,9 +222,9 @@ export function updateGridPage(context) {
             const filterContainer = document.createElement("div");
             filterContainer.className = "selected-filter-item";
             let label = "";
-            if (filter.type === "max-price" ) {
+            if (filter.type === context.urlParams["max-price"] ) {
                 label = "Max Price: ";
-            } else if (filter.type === "min-price" ) {
+            } else if (filter.type === context.urlParams["min-price"] ) {
                 label = "Min Price: ";
             }
             filterContainer.innerHTML = `${label}${filter.value}`;
@@ -428,16 +428,16 @@ export function createFilterWithChildren(context, tree, filter, rootCategory = f
         filterItem.className = `filter-item${rootCategoryClass}`;
         filterItem.innerHTML = `${tree.name} (${tree.doc_count})`;
         filterItem.addEventListener("click", () => {
-            if (filter.filter_name === "categories") {
+            if (filter.filter_name === context.urlParams["categories"]) {
                 if (rootCategory) {
                     context.selectedPopupCategory = "";
-                    removeUrlParameter("scoped");
-                    removeUrlParameter("popup-category");
+                    removeUrlParameter(context.urlParams["scoped"]);
+                    removeUrlParameter(context.urlParams["popup-category"]);
                     redirectToSearchPage(filter.filter_name, tree.name);
                 } else {
                     context.selectedCategory = "";
                     context.selectedPopupCategory = tree.name;
-                    removeUrlParameter("categories");
+                    removeUrlParameter(context.urlParams["categories"]);
                     redirectToSearchPage('popup-category', tree.name);
                 }
             } else {
@@ -527,8 +527,8 @@ export function relativeCategories(context) {
             const element = document.createElement("div");
             element.textContent = `${item.name} (${item.doc_count})`;
             element.addEventListener("click", () => {
-                removeUrlParameter("categories");
-                redirectToSearchPage("popup-category", item.name);
+                removeUrlParameter(context.urlParams["categories"]);
+                redirectToSearchPage(context.urlParams["popup-category"], item.name);
             });
             list.appendChild(element);
         });
@@ -558,7 +558,7 @@ export function updateBrandContainer(context) {
             const element = document.createElement("div");
             element.textContent = `${item.key} (${item.doc_count})`;
             element.addEventListener("click", () => {
-                redirectToSearchPage("brand", item.key);
+                redirectToSearchPage(context.urlParams["brand"], item.key);
             });
             list.appendChild(element);
         });
@@ -611,7 +611,7 @@ export function recentSearches(context) {
             const element = document.createElement("div");
             element.textContent = `${item.search_term}`;
             element.addEventListener("click", () => {
-                redirectToSearchPage("q", item.search_term);
+                redirectToSearchPage(context.urlParams["q"], item.search_term);
             });
             list.appendChild(element);
         });

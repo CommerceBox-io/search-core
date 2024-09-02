@@ -35,6 +35,7 @@ class SearchCore {
                     uuid = "",
                     segment_id = "",
                     segment_specialty_id = "",
+                    url_params = {}
                 }) {
         this.apiEndpoint = apiEndpoint;
         this.container = document.querySelector(containerSelector);
@@ -42,7 +43,7 @@ class SearchCore {
 
         initializeUser(this, uuid);
         initializeCallbacks(this, addToCartCallback, addToWishlistCallback, addToCompareCallback);
-        initializeProperties(this, layoutTemplate, externalGridSelector, searchPageRedirect, segment_id, segment_specialty_id);
+        initializeProperties(this, layoutTemplate, externalGridSelector, searchPageRedirect, segment_id, segment_specialty_id, url_params);
         initializeElements(this);
         init(this);
     }

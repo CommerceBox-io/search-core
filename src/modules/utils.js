@@ -126,7 +126,7 @@ export function isGridVisible(context) {
 // TODO: This should be temporary until brand is correctly implemented in filters
 export function addCustomToFilters(context) {
     context.data.filters.push({
-        filter_name: "brand",
+        filter_name: context.urlParams["brand"],
         tree: [
             {
                 children: context.data.rel_brands.map(brand => {
@@ -222,12 +222,12 @@ export function formatPrice(value) {
  * @param context - The SearchCore instance.
  */
 export function clearSelectedFilters(context) {
-    removeUrlParameter("page");
-    removeUrlParameter("max-price");
-    removeUrlParameter("min-price");
-    removeUrlParameter("categories");
-    removeUrlParameter("popup-category");
-    removeUrlParameter("brand");
+    removeUrlParameter(context.urlParams["page"]);
+    removeUrlParameter(context.urlParams["max-price"]);
+    removeUrlParameter(context.urlParams["min-price"]);
+    removeUrlParameter(context.urlParams["categories"]);
+    removeUrlParameter(context.urlParams["popup-category"]);
+    removeUrlParameter(context.urlParams["brand"]);
     context.selectedCategory = "";
     context.selectedPopupCategory = "";
     context.selectedBrand = "";

@@ -85,7 +85,7 @@ export function createNumericPagination(context) {
             fetchData(context, context["inputElement"].value, true).then(() => {
                 context.gridPage = page;
                 updateGridPage(context);
-                updateUrlParameter("page", page.toString())
+                updateUrlParameter(context.urlParams["page"], page.toString())
             });
         });
         return button;
@@ -172,8 +172,8 @@ export function addPriceFilter(context) {
         context.priceMinValue = +minPriceInput.value;
         context.priceMaxValue = +maxPriceInput.value;
         fetchData(context, context["inputElement"].value, true).then(() => {
-            updateUrlParameter("min-price", context.priceMinValue.toString());
-            updateUrlParameter("max-price", context.priceMaxValue.toString());
+            updateUrlParameter(context.urlParams["min-price"], context.priceMinValue.toString());
+            updateUrlParameter(context.urlParams["max-price"], context.priceMaxValue.toString());
             updateGridPage(context);
         });
     };
