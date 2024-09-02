@@ -124,3 +124,8 @@ e.g. `{{containerElement[class:"suggested-items-list", datatitle:"Σας προ�
 16. `{{scopedSearchDropdown}}`: This placeholder is replaced with a dropdown for selecting a category to filter the results.
 
 A complete layout example can be found in the `https://cube.commercebox.io/search/templates/template.html` file.
+
+
+### Additional instructions ###
+
+https://commercebox.atlassian.net/wiki/spaces/SD/pages/72679425/Additional+instuctions
