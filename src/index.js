@@ -39,9 +39,9 @@ class SearchCore {
                     url_params = {},
                     user = ""
                 }) {
-        const userParam = user ? `?user=${user}` : "";
-        this.apiEndpoint = `${apiEndpoint}${userParam}`;
-        this.autoCompleteUrl = `${apiEndpoint}/autocomplete${userParam}`;
+        this.userParam = user;
+        this.apiEndpoint = apiEndpoint;
+        this.autoCompleteUrl = `${apiEndpoint}/autocomplete`;
         this.container = document.querySelector(containerSelector);
         this.elementsMapping = getElementsMapping();
 

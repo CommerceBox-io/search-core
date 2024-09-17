@@ -52,7 +52,8 @@ export function fetchAutoCompleteData(context, query) {
         autosuggest: 1,
         autosuggest_limit: 30,
         debug_query_elastic: 0,
-        debug_query_elastic_show: 0
+        debug_query_elastic_show: 0,
+        user: context.userParam
     }
     return fetch(context.autoCompleteUrl, {
         method: "POST",
@@ -112,7 +113,8 @@ export function fetchData(context, query, isGrid = false) {
         filter_min_price: minPrice,
         filter_max_price: maxPrice,
         sort_attribute: selectedSortingBy(context),
-        sort_order: selectedSortingOrder(context)
+        sort_order: selectedSortingOrder(context),
+        user: context.userParam
     };
 
     return fetch(context.apiEndpoint, {
@@ -187,7 +189,8 @@ export function fetchMaxPrice(context, query, isGrid = false) {
         filter_min_price: 0,
         filter_max_price: 0,
         sort_attribute: selectedSortingBy(context),
-        sort_order: selectedSortingOrder(context)
+        sort_order: selectedSortingOrder(context),
+        user: context.userParam
     };
 
     return fetch(context.apiEndpoint, {
