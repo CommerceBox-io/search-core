@@ -606,6 +606,7 @@ export function getElementsMapping() {
 export function getCategoriesList(context) {
     if (context.userParam === "sugar")
         return {
+            "Όλες οι Κατηγορίες": "",
             "NEW": "NEW",
             "ΦΟΡΜΕΣ": "ΦΟΡΜΕΣ",
             "WORK IT OUT": "WORK IT OUT",
