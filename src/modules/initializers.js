@@ -238,8 +238,8 @@ export function initializeSearchFromUrl(context) {
     const categories = urlParams.get(context.urlParams["categories"]);
     const scoped = urlParams.get(context.urlParams["scoped"]);
     const brand = urlParams.get(context.urlParams["brand"]);
-    const maxPrice = urlParams.get(context.urlParams["max-price"]);
-    const minPrice = urlParams.get(context.urlParams["min-price"]);
+    const maxPrice = urlParams.get(context.urlParams["maxPrice"]);
+    const minPrice = urlParams.get(context.urlParams["minPrice"]);
     const popupCategory = urlParams.get(context.urlParams["popup-category"]);
 
     if (categories) {

@@ -172,8 +172,8 @@ export function addPriceFilter(context) {
         context.priceMinValue = +minPriceInput.value;
         context.priceMaxValue = +maxPriceInput.value;
         fetchData(context, context["inputElement"].value, true).then(() => {
-            updateUrlParameter(context.urlParams["min-price"], context.priceMinValue.toString());
-            updateUrlParameter(context.urlParams["max-price"], context.priceMaxValue.toString());
+            updateUrlParameter(context.urlParams["minPrice"], context.priceMinValue.toString());
+            updateUrlParameter(context.urlParams["maxPrice"], context.priceMaxValue.toString());
             updateGridPage(context);
         });
     };

@@ -223,8 +223,8 @@ export function formatPrice(value) {
  */
 export function clearSelectedFilters(context) {
     removeUrlParameter(context.urlParams["page"]);
-    removeUrlParameter(context.urlParams["max-price"]);
-    removeUrlParameter(context.urlParams["min-price"]);
+    removeUrlParameter(context.urlParams["maxPrice"]);
+    removeUrlParameter(context.urlParams["minPrice"]);
     removeUrlParameter(context.urlParams["categories"]);
     removeUrlParameter(context.urlParams["popup-category"]);
     removeUrlParameter(context.urlParams["brand"]);

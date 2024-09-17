@@ -205,11 +205,11 @@ export function updateGridPage(context) {
             value: context.selectedBrand
         },
         {
-            type: context.urlParams["max-price"],
+            type: context.urlParams["maxPrice"],
             value: context.priceMaxValue === 0 || context.priceMaxValue === context.maxPrice ? null :`${context.priceMaxValue}${context.currency}`
         },
         {
-            type: context.urlParams["min-price"],
+            type: context.urlParams["minPrice"],
             value: context.priceMinValue === 0 ? null :`${context.priceMinValue}${context.currency}`
         },
         {
@@ -222,9 +222,9 @@ export function updateGridPage(context) {
             const filterContainer = document.createElement("div");
             filterContainer.className = "selected-filter-item";
             let label = "";
-            if (filter.type === context.urlParams["max-price"] ) {
+            if (filter.type === context.urlParams["maxPrice"] ) {
                 label = "Max Price: ";
-            } else if (filter.type === context.urlParams["min-price"] ) {
+            } else if (filter.type === context.urlParams["minPrice"] ) {
                 label = "Min Price: ";
             }
             filterContainer.innerHTML = `${label}${filter.value}`;

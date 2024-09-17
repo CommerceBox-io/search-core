@@ -135,14 +135,14 @@ export function fetchData(context, query, isGrid = false) {
             // TODO: uncomment this when fetchMaxPrice is removed
             // if (context.priceMaxValue > context.maxPrice) {
             //     context.priceMaxValue = context.maxPrice;
-            //     updateUrlParameter(context.urlParams["max-price"], context.maxPrice.toString());
+            //     updateUrlParameter(context.urlParams["maxPrice"], context.maxPrice.toString());
             // }
             // else if (context.priceMaxValue === 0) {
             //     context.priceMaxValue = context.maxPrice;
             // }
             // if (+context.priceMinValue !== +context.minPrice) {
             //     context.priceMinValue = context.minPrice;
-            //     updateUrlParameter(context.urlParams["min-price"], context.priceMinValue.toString());
+            //     updateUrlParameter(context.urlParams["minPrice"], context.priceMinValue.toString());
             // }
             context.totalProductCount = data.result.total_count;
             context.currentProductCount = data.result.results.length;
@@ -206,7 +206,7 @@ export function fetchMaxPrice(context, query, isGrid = false) {
                 context.maxPrice = Math.ceil(data.result.max_price);
                 if (context.priceMaxValue > context.maxPrice) {
                     context.priceMaxValue = context.maxPrice;
-                    updateUrlParameter(context.urlParams["max-price"], context.maxPrice.toString());
+                    updateUrlParameter(context.urlParams["maxPrice"], context.maxPrice.toString());
                 }
                 else if (context.priceMaxValue === 0) {
                     context.priceMaxValue = context.maxPrice;
