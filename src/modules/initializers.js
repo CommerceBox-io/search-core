@@ -82,7 +82,6 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     context.debugQueryContainerID = "debug-query-container";
     context.paginationType = "numeric";
     context.defautlTemplate = "https://cube.commercebox.io/search/templates/template.html";
-    context.autoCompleteUrl = `${context.apiEndpoint}/autocomplete`;
 
     context.placeholders = [];
     context.autocompleteTermsList = [];

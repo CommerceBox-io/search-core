@@ -22,6 +22,7 @@ class SearchCore {
      * @param {string} [options.uuid=""] - The UUID, hash of user id.
      * @param {string} [options.segment_id=""] - The segment ID.
      * @param {string} [options.segment_specialty_id=""] - The segment specialty ID.
+     * @param {string} [options.user=""] - The unique user identifier
      */
     constructor({
                     apiEndpoint,
@@ -35,9 +36,12 @@ class SearchCore {
                     uuid = "",
                     segment_id = "",
                     segment_specialty_id = "",
-                    url_params = {}
+                    url_params = {},
+                    user = ""
                 }) {
-        this.apiEndpoint = apiEndpoint;
+        const userParam = user ? `?user=${user}` : "";
+        this.apiEndpoint = `${apiEndpoint}${userParam}`;
+        this.autoCompleteUrl = `${apiEndpoint}/autocomplete${userParam}`;
         this.container = document.querySelector(containerSelector);
         this.elementsMapping = getElementsMapping();
 
