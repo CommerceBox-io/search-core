@@ -197,7 +197,7 @@ export function initializeSecondaryContainers(context) {
  */
 export function initializeScopedSearchDropdown(context) {
     if (context["scopedSearchDropdown"]) {
-        const categories = getCategoriesList();
+        const categories = getCategoriesList(context);
         const wrapper = document.createElement("div");
         wrapper.className = "select-wrapper";
         context["scopedSearchDropdown"].parentNode.insertBefore(wrapper, context["scopedSearchDropdown"]);
@@ -603,7 +603,21 @@ export function getElementsMapping() {
 /**
  * Get the categories list. TODO: For now is a dummy list. Will get them from settings endpoint
  */
-export function getCategoriesList() {
+export function getCategoriesList(context) {
+    if (context.userParam === "sugar")
+        return {
+            "NEW": "NEW",
+            "ΦΟΡΜΕΣ": "ΦΟΡΜΕΣ",
+            "WORK IT OUT": "WORK IT OUT",
+            "ΕΝΔΥΜΑΤΑ": "ΕΝΔΥΜΑΤΑ",
+            "ΜΑΓΙΟ": "ΜΑΓΙΟ",
+            "ΠΑΙΔΙΚΑ": "ΠΑΙΔΙΚΑ",
+            "ΑΞΕΣΟΥΑΡ": "ΑΞΕΣΟΥΑΡ",
+            "COLLECTIONS": "COLLECTIONS",
+            "SALE": "SALE",
+            "OUTLET": "OUTLET"
+        }
+
     return {
         "Όλες οι Κατηγορίες": "",
         "ΗΛΕΚΤΡΟΛΟΓΙΚΑ": "ΗΛΕΚΤΡΟΛΟΓΙΚΑ",
