@@ -3,6 +3,7 @@ import {
     autocompleteWord,
     relativeCategories,
     updateBrandContainer,
+    updateBannerContainer,
     updateTitles,
     typeaheadList,
     recentSearches
@@ -151,6 +152,7 @@ export function fetchData(context, query, isGrid = false) {
             typeaheadList(context);
             relativeCategories(context);
             updateBrandContainer(context);
+            updateBannerContainer(context);
             recentSearches(context);
             updateUrlParameter(context.urlParams["q"], query);
             context.completedSearch = 0;

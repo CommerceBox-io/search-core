@@ -567,6 +567,26 @@ export function updateBrandContainer(context) {
 }
 
 /**
+ * Updates the banner container with the fetched brands.
+ * @param {object} context - The SearchCore instance.
+ */
+export function updateBannerContainer(context) {
+    const ad = context.data.ads;
+    if (!ad) return;
+    const banner = JSON.parse(ad);
+    if (context["bannerContainerElement"] && banner["image"]) {
+        context["bannerContainerElement"].innerHTML = "";
+        const a = document.createElement("a");
+        a.href = banner.action;
+        a.target = "_blank";
+        const img = document.createElement("img");
+        img.src = banner.image;
+        a.appendChild(img);
+        context["bannerContainerElement"].appendChild(a);
+    }
+}
+
+/**
  * Updates the titles with the current and total product count.
  * @param {object} context - The SearchCore instance.
  */
