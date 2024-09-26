@@ -45,7 +45,8 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
         brand: "brand",
         maxPrice: "max-price",
         minPrice: "min-price",
-        popupCategory: "popup-category"
+        popupCategory: "popup-category",
+        page: "page"
     }
 
     context.urlParams = {...defaultParams, ...urlParams};
