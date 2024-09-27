@@ -198,7 +198,7 @@ export function initializeSecondaryContainers(context) {
  */
 export function initializeScopedSearchDropdown(context) {
     if (context["scopedSearchDropdown"]) {
-        const categories = getCategoriesList(context);
+        const categories = context.settings.categories || {};
         const wrapper = document.createElement("div");
         wrapper.className = "select-wrapper";
         context["scopedSearchDropdown"].parentNode.insertBefore(wrapper, context["scopedSearchDropdown"]);
@@ -599,54 +599,4 @@ export function getElementsMapping() {
         { name: "debugQueryContainer", replacement: "debugQueryContainer", type: "div" },
         { name: "debugQueryButton", replacement: "debugQueryButton", type: "div" },
     ]
-}
-
-/**
- * Get the categories list. TODO: For now is a dummy list. Will get them from settings endpoint
- */
-export function getCategoriesList(context) {
-    if (context.userParam === "sugar")
-        return {
-            "Όλες οι Κατηγορίες": "",
-            "NEW": "NEW",
-            "ΦΟΡΜΕΣ": "ΦΟΡΜΕΣ",
-            "WORK IT OUT": "WORK IT OUT",
-            "ΕΝΔΥΜΑΤΑ": "ΕΝΔΥΜΑΤΑ",
-            "ΜΑΓΙΟ": "ΜΑΓΙΟ",
-            "ΠΑΙΔΙΚΑ": "ΠΑΙΔΙΚΑ",
-            "ΑΞΕΣΟΥΑΡ": "ΑΞΕΣΟΥΑΡ",
-            "COLLECTIONS": "COLLECTIONS",
-            "SALE": "SALE",
-            "OUTLET": "OUTLET"
-        }
-
-    if (context.userParam === "evripidis")
-        return {
-            "Όλες οι κατηγορίες": "",
-            "ΒΙΒΛΙΑ": "ΒΙΒΛΙΑ",
-            "ΣΧΟΛΙΚΑ": "ΣΧΟΛΙΚΑ",
-            "ΧΑΡΤΟΠΩΛΕΙΟ": "ΧΑΡΤΟΠΩΛΕΙΟ",
-            "ΑΝΑΛΩΣΙΜΑ Η/Υ": "ΑΝΑΛΩΣΙΜΑ Η/Υ",
-            "ΖΩΓΡΑΦΙΚΗ-DIY": "ΖΩΓΡΑΦΙΚΗ-DIY",
-            "ΠΑΙΔΙ & ΠΑΙΧΝΙΔΙ": "ΠΑΙΔΙ & ΠΑΙΧΝΙΔΙ"
-        }
-
-    return {
-        "Όλες οι Κατηγορίες": "",
-        "ΗΛΕΚΤΡΟΛΟΓΙΚΑ": "ΗΛΕΚΤΡΟΛΟΓΙΚΑ",
-        "ΒΙΟΜΗΧΑΝΙΚΟ ΥΛΙΚΟ": "ΒΙΟΜΗΧΑΝΙΚΟ ΥΛΙΚΟ",
-        "ΔΙΑΚΟΠΤΕΣ ΚΑΙ ΠΡΙΖΕΣ": "ΔΙΑΚΟΠΤΕΣ ΚΑΙ ΠΡΙΖΕΣ",
-        "ΕΡΓΑΛΕΙΑ": "ΕΡΓΑΛΕΙΑ",
-        "ΑΥΤΟΜΑΤΙΣΜΟΣ ΚΤΙΡΙΟΥ": "ΑΥΤΟΜΑΤΙΣΜΟΣ ΚΤΙΡΙΟΥ",
-        "ΦΩΤΙΣΜΟΣ": "ΦΩΤΙΣΜΟΣ",
-        "ΗΛΕΚΤΡΟΝΙΚΑ & ΔΙΚΤΥΑΚΑ": "ΗΛΕΚΤΡΟΝΙΚΑ & ΔΙΚΤΥΑΚΑ",
-        "ΛΑΜΠΕΣ": "ΛΑΜΠΕΣ",
-        "ΚΤΙΡΙΑΚΟΣ ΕΞΟΠΛΙΣΜΟΣ": "ΚΤΙΡΙΑΚΟΣ ΕΞΟΠΛΙΣΜΟΣ",
-        "ΚΑΛΩΔΙΑ": "ΚΑΛΩΔΙΑ",
-        "ΨΥΞΗ & ΘΕΡΜΑΝΣΗ": "ΨΥΞΗ & ΘΕΡΜΑΝΣΗ",
-        "ΗΛΕΚΤΡΟΚΙΝΗΣΗ": "ΗΛΕΚΤΡΟΚΙΝΗΣΗ",
-        "ΕΝΕΡΓΕΙΑΚΕΣ ΛΥΣΕΙΣ": "ΕΝΕΡΓΕΙΑΚΕΣ ΛΥΣΕΙΣ",
-        "Landing Pages": "Landing Pages",
-        "SMART HOME": "SMART HOME",
-    };
 }

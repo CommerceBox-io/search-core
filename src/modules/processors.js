@@ -14,9 +14,9 @@ import {
 } from './domElements';
 import {
     fetchData,
-    fetchMaxPrice
+    fetchMaxPrice,
+    fetchSettings
 } from './fetchers';
-import {logPlugin} from "@babel/preset-env/lib/debug";
 
 /**
  * Processes a single element by replacing its placeholder with an actual element.
@@ -637,4 +637,12 @@ export function recentSearches(context) {
         });
         context["recentSearchListElement"].appendChild(list);
     }
+}
+
+/**
+ * Get the external settings.
+ * @param {object} context - The SearchCore instance.
+ */
+export async function getSettings(context) {
+    await fetchSettings(context);
 }

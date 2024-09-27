@@ -165,6 +165,29 @@ export function fetchData(context, query, isGrid = false) {
         });
 }
 
+export function fetchSettings(context) {
+    const props = {
+        user: context.userParam
+    };
+
+    return fetch(context.settingsUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify(props),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.code === 200) {
+                context.settings = data.result;
+            }
+        })
+        .catch((error) => {
+            console.error("Error fetching settings:", error)
+        });
+}
+
 // TODO: this is a temporary way to get max price, need to be sent in fetchData
 export function fetchMaxPrice(context, query, isGrid = false) {
     const limit = isGrid ? context.gridProductsPerPage : 4;

@@ -6,6 +6,7 @@ import {
     init,
     getElementsMapping
 } from "./modules/initializers";
+import { getSettings } from "./modules/processors";
 
 class SearchCore {
     /**
@@ -42,14 +43,18 @@ class SearchCore {
         this.userParam = user;
         this.apiEndpoint = apiEndpoint;
         this.autoCompleteUrl = `${apiEndpoint}/autocomplete`;
+        this.settingsUrl = `${apiEndpoint}/settings`;
         this.container = document.querySelector(containerSelector);
         this.elementsMapping = getElementsMapping();
+        this.settings = [];
 
-        initializeUser(this, uuid);
-        initializeCallbacks(this, addToCartCallback, addToWishlistCallback, addToCompareCallback);
-        initializeProperties(this, layoutTemplate, externalGridSelector, searchPageRedirect, segment_id, segment_specialty_id, url_params);
-        initializeElements(this);
-        init(this);
+        getSettings(this).finally(() => {
+            initializeUser(this, uuid);
+            initializeCallbacks(this, addToCartCallback, addToWishlistCallback, addToCompareCallback);
+            initializeProperties(this, layoutTemplate, externalGridSelector, searchPageRedirect, segment_id, segment_specialty_id, url_params);
+            initializeElements(this);
+            init(this);
+        });
     }
 
     /**
