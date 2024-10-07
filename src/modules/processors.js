@@ -3,7 +3,7 @@ import {
     extractAttributes,
     removeUrlParameter,
     redirectToSearchPage,
-    formatPrice, updateUrlParameter,
+    formatPrice,
 } from './utils';
 import {
     constructElement,
@@ -178,6 +178,9 @@ export function updatePopupResults(context) {
  * @param {object} context - The SearchCore instance.
  */
 export function updateGridPage(context) {
+    if (!context["gridContainerElement"]) {
+        return;
+    }
     context["gridContainerElement"].innerHTML = "";
     if (!context.data || !context["gridContainerElement"]) {
         context["gridContainerElement"].innerHTML = "<div style='text-align: center; font-weight: bold'>Δεν βρέθηκαν αποτελέσματα</div>";
