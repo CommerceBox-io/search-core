@@ -80,7 +80,7 @@ export function containsGreekWord(str) {
  * @param {object} context - The SearchCore instance.
  */
 export function redirectToExternalSearchPage(context) {
-    if (context.searchPageRedirect && contextcontext.searchPageRedirect.trim() !== "") {
+    if (context.searchPageRedirect && context.searchPageRedirect.trim() !== "") {
         try {
             const currentParams = new URLSearchParams(window.location.search);
             const inputValue = context["inputElement"].value;
