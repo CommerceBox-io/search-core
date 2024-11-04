@@ -38,7 +38,9 @@ class SearchCore {
                     segment_id = "",
                     segment_specialty_id = "",
                     url_params = {},
-                    user = ""
+                    user = "",
+                    locale = "",
+                    platform = ""
                 }) {
         this.userParam = user;
         this.apiEndpoint = apiEndpoint;
@@ -47,6 +49,8 @@ class SearchCore {
         this.container = document.querySelector(containerSelector);
         this.elementsMapping = getElementsMapping();
         this.settings = [];
+        this.platform = platform;
+        this.locale = locale;
 
         getSettings(this).finally(() => {
             initializeUser(this, uuid);

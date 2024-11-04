@@ -17,6 +17,13 @@ import {
     selectedSortingBy,
     selectedSortingOrder
 } from './utils';
+import {
+    fetchDataEndedEvent,
+    fetchTemplateEndedEvent,
+    fetchAutocompleteEndedEvent,
+    fetchSettingsEndedEvent,
+    fetchMaxPriceEndedEvent
+} from './events';
 
 /**
  * Loads the given HTML from a URL
@@ -32,6 +39,7 @@ export function fetchTemplate(context, url) {
                     console.log("Template fetched:", html)
                 }
                 loadTemplate(context, html);
+                fetchTemplateEndedEvent();
             });
     } catch (error) {
         console.error("Error fetching template:", error);
@@ -54,7 +62,8 @@ export function fetchAutoCompleteData(context, query) {
         autosuggest_limit: 30,
         debug_query_elastic: 0,
         debug_query_elastic_show: 0,
-        user: context.userParam
+        user: context.userParam,
+        locale: context.locale
     }
     return fetch(context.autoCompleteUrl, {
         method: "POST",
@@ -74,6 +83,7 @@ export function fetchAutoCompleteData(context, query) {
             context.autocompleteTermsList =  usefulAutocompleteTerms(context, data.result.typeahead, query);
             sliceAutocompleteTermsInLevels(context);
             autocompleteWord(context, query);
+            fetchAutocompleteEndedEvent();
         })
         .catch((error) => {
             console.error("Error fetching data:", error)
@@ -115,7 +125,8 @@ export function fetchData(context, query, isGrid = false) {
         filter_max_price: maxPrice,
         sort_attribute: selectedSortingBy(context),
         sort_order: selectedSortingOrder(context),
-        user: context.userParam
+        user: context.userParam,
+        locale: context.locale
     };
 
     return fetch(context.apiEndpoint, {
@@ -133,7 +144,8 @@ export function fetchData(context, query, isGrid = false) {
             context.data = data.result;
             context.maxPrice = Math.ceil(data.result.max_price);
             context.minPrice = data.result.min_price ? Math.floor(data.result.min_price) : 0;
-            // TODO: uncomment this when fetchMaxPrice is removed
+            // TODO: uncomment this when
+            //  fetchMaxPrice is removed
             // if (context.priceMaxValue > context.maxPrice) {
             //     context.priceMaxValue = context.maxPrice;
             //     updateUrlParameter(context.urlParams["maxPrice"], context.maxPrice.toString());
@@ -159,6 +171,7 @@ export function fetchData(context, query, isGrid = false) {
             context.page = 0;
             context.gridPage = 1;
             removeUrlParameter(context.urlParams["page"]);
+            fetchDataEndedEvent();
         })
         .catch((error) => {
             console.error("Error fetching data:", error)
@@ -167,7 +180,8 @@ export function fetchData(context, query, isGrid = false) {
 
 export function fetchSettings(context) {
     const props = {
-        user: context.userParam
+        user: context.userParam,
+        locale: context.locale
     };
 
     return fetch(context.settingsUrl, {
@@ -181,6 +195,7 @@ export function fetchSettings(context) {
         .then((data) => {
             if (data.code === 200) {
                 context.settings = data.result;
+                fetchSettingsEndedEvent();
             }
         })
         .catch((error) => {
@@ -215,7 +230,8 @@ export function fetchMaxPrice(context, query, isGrid = false) {
         filter_max_price: 0,
         sort_attribute: selectedSortingBy(context),
         sort_order: selectedSortingOrder(context),
-        user: context.userParam
+        user: context.userParam,
+        locale: context.locale
     };
 
     return fetch(context.apiEndpoint, {
@@ -236,6 +252,7 @@ export function fetchMaxPrice(context, query, isGrid = false) {
                 else if (context.priceMaxValue === 0) {
                     context.priceMaxValue = context.maxPrice;
                 }
+                fetchMaxPriceEndedEvent();
             }
         })
         .catch((error) => {

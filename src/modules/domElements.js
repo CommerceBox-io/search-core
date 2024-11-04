@@ -140,6 +140,11 @@ export function addPriceFilter(context) {
     const priceFilter = document.createElement("div");
     priceFilter.className = "price-filter";
 
+    const priceHighestLabel = document.createElement("div");
+    priceHighestLabel.className = "price-highest";
+    priceHighestLabel.textContent = `Η υψηλότερη τιμή είναι ${formatPrice(context.maxPrice)}`;
+    priceFilter.appendChild(priceHighestLabel);
+
     const inputsContainer = document.createElement("div");
     inputsContainer.className = "inputs-container";
 
@@ -159,15 +164,25 @@ export function addPriceFilter(context) {
     maxPriceInput.step = "1";
     maxPriceInput.className = "range-max";
 
-    // Function to update labels
+    // Labels for displaying current price range
+    const priceLabel = document.createElement("div");
+    priceLabel.className = "price-label";
+
+    const minPriceLabel = document.createElement("span");
+    minPriceLabel.id = "min_price";
+    minPriceLabel.textContent = `${formatPrice(context.priceMinValue)}`;
+    priceLabel.appendChild(minPriceLabel);
+
+    const maxPriceLabel = document.createElement("span");
+    maxPriceLabel.id = "max_price";
+    maxPriceLabel.textContent = `${formatPrice(context.priceMaxValue)}`;
+    priceLabel.appendChild(maxPriceLabel);
+
     const updateLabels = () => {
-        const minPriceLabel = document.getElementById("min_price");
-        minPriceLabel.innerHTML = `${formatPrice(+minPriceInput.value)}`;
-        const maxPriceLabel = document.getElementById("max_price");
-        maxPriceLabel.innerHTML = `${formatPrice(+maxPriceInput.value)}`;
+        minPriceLabel.textContent = `${formatPrice(+minPriceInput.value)}`;
+        maxPriceLabel.textContent = `${formatPrice(+maxPriceInput.value)}`;
     };
 
-    // Function to update price values
     const updatePrices = () => {
         context.priceMinValue = +minPriceInput.value;
         context.priceMaxValue = +maxPriceInput.value;
@@ -178,7 +193,6 @@ export function addPriceFilter(context) {
         });
     };
 
-    // Event listeners for input and update
     minPriceInput.addEventListener("input", () => {
         if (+minPriceInput.value > +maxPriceInput.value) {
             minPriceInput.value = maxPriceInput.value;
@@ -198,26 +212,12 @@ export function addPriceFilter(context) {
 
     inputsContainer.appendChild(minPriceInput);
     inputsContainer.appendChild(maxPriceInput);
-
     priceFilter.appendChild(inputsContainer);
-
-    const priceLabel = document.createElement("div");
-    priceLabel.className = "price-label";
-
-    const minPriceLabel = document.createElement("span");
-    minPriceLabel.id = "min_price";
-    minPriceLabel.innerHTML = `${formatPrice(context.priceMinValue)}`;
-    priceLabel.appendChild(minPriceLabel);
-
-    const maxPriceLabel = document.createElement("span");
-    maxPriceLabel.id = "max_price";
-    maxPriceLabel.innerHTML = `${formatPrice(context.priceMaxValue)}`;
-    priceLabel.appendChild(maxPriceLabel);
-
     priceFilter.appendChild(priceLabel);
 
     return priceFilter;
 }
+
 
 /**
  * Displays the debug query container with debug information.
