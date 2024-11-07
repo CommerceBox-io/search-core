@@ -7,6 +7,7 @@ import {
     redirectToExternalSearchPage,
     removeUrlParameter,
     updateUrlParameter,
+    initPagination
 } from './utils';
 import {fetchAutoCompleteData, fetchData, fetchTemplate,} from './fetchers';
 import {
@@ -92,14 +93,18 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     context.originalAutocompleteWords = [];
 
     context.sortOrderList = {
-        asc: "Αύξουσα",
-        desc: "Φθήνουσα"
+        asc: context.t["ascending"],
+        desc: context.t["descending"]
     };
     context.sortByList = {
-        price: "Τιμή",
-        "top-sales": "Πωλήσεις",
-        date: "Ημερομηνία",
+        price: context.t["price"],
+        "top-sales": context.t["sales"],
+        date: context.t["date"],
     };
+
+    if (context.sorting && Object.keys(context.sorting).length > 0 && context.sorting[context.locale]) {
+        context.sortByList = context.sorting[context.locale];
+    }
 
     context.measurer = document.createElement("span");
 }
@@ -218,6 +223,7 @@ export function initializeScopedSearchDropdown(context) {
             context.selectedCategory = "";
             context.selectedPopupCategory = "";
             const isGrid = !isPopupVisible(context);
+            initPagination(context);
             fetchData(context, query, isGrid).then(() => {
                 if (isPopupVisible(context)) {
                     updatePopupResults(context);
@@ -241,7 +247,7 @@ export function initializeSearchFromUrl(context) {
     const brand = urlParams.get(context.urlParams["brand"]);
     const maxPrice = urlParams.get(context.urlParams["maxPrice"]);
     const minPrice = urlParams.get(context.urlParams["minPrice"]);
-    const popupCategory = urlParams.get(context.urlParams["popup-category"]);
+    const popupCategory = urlParams.get(context.urlParams["popupCategory"]);
 
     if (categories) {
         context.selectedCategory = categories;
@@ -370,6 +376,7 @@ export function addEventListeners(context) {
             }
             clearData(context, false);
             context.completedSearch = 1;
+            initPagination(context);
             fetchData(context, context["inputElement"].value, true).then(() => {
                 updateGridPage(context);
             });
@@ -415,6 +422,7 @@ export function addEventListeners(context) {
             }
             fetchAutoCompleteData(context, query).then();
             if (query.length >= context.minQueryLength && e.key !== "Enter") {
+                initPagination(context);
                 fetchData(context, query).then(() => {
                     clearSelectedFilters(context);
                     updatePopupResults(context);
@@ -447,6 +455,7 @@ export function addEventListeners(context) {
         const query = context["inputElement"].value;
         if (query.length >= context.minQueryLength) {
             clearData(context, false);
+            initPagination(context);
             fetchData(context, query, true).then(() => {
                 updateGridPage(context);
             });
@@ -457,6 +466,7 @@ export function addEventListeners(context) {
         const query = context["inputElement"].value;
         if (query.length >= context.minQueryLength) {
             clearData(context, false);
+            initPagination(context);
             fetchData(context, query, true).then(() => {
                 updateGridPage(context);
             });
@@ -512,6 +522,7 @@ export function initScanner(context) {
                                 context["scannerButtonElement"].classList.remove("active");
                                 context["inputElement"].value = decodedText;
                                 context.completedSearch = 1;
+                                initPagination(context);
                                 fetchData(context, decodedText).then(() => {
                                     updatePopupResults(context);
                                 });
@@ -568,6 +579,7 @@ export function voiceSearch(context) {
         const query = e.results[0][0].transcript;
         context["inputElement"].value = query;
         context.completedSearch = 1;
+        initPagination(context);
         fetchData(context, query).then(() => {
             updatePopupResults(context);
             updateMeasurerPosition(context, query);

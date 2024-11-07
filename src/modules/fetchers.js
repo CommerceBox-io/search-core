@@ -113,8 +113,8 @@ export function fetchData(context, query, isGrid = false) {
         facets: 1,
         autosuggest: 0,
         autosuggest_limit: 5,
-        debug_query_elastic: 1,
-        debug_query_elastic_show: 1,
+        debug_query_elastic: 0,
+        debug_query_elastic_show: 0,
         segment_id: context.segment_id,
         segment_specialty_id: context.segment_specialty_id,
         scope_brand: context.selectedBrand,
@@ -168,9 +168,6 @@ export function fetchData(context, query, isGrid = false) {
             recentSearches(context);
             updateUrlParameter(context.urlParams["q"], query);
             context.completedSearch = 0;
-            context.page = 0;
-            context.gridPage = 1;
-            removeUrlParameter(context.urlParams["page"]);
             fetchDataEndedEvent();
         })
         .catch((error) => {

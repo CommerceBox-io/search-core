@@ -4,6 +4,7 @@ import {
     removeUrlParameter,
     redirectToSearchPage,
     formatPrice,
+    initPagination,
 } from './utils';
 import {
     constructElement,
@@ -11,6 +12,7 @@ import {
     createNumericPagination,
     createPrevNextPagination,
     addPriceFilter,
+    createNumericPaginationForShopify
 } from './domElements';
 import {
     fetchData,
@@ -123,7 +125,7 @@ export function updatePopupResults(context) {
 
     if (!context.data || !context.data.results || context.data.results.length === 0) {
         context.container.classList.add("no-results");
-        context["resultsElement"].innerHTML = '<div class="no-results">Δεν βρέθηκαν αποτελέσματα</div>';
+        context["resultsElement"].innerHTML = `<div class="no-results"> ${context.t["no_results_found"]}</div>`;
     } else {
         context.data.results.forEach((item) => {
             const element = document.createElement("div");
@@ -131,6 +133,7 @@ export function updatePopupResults(context) {
             element.addEventListener("click", () => {
                 const query = context["inputElement"].value;
                 context.clearData(false);
+                initPagination(context);
                 context.fetchData(query, true).then(() => {
                     context.updateGridPage();
                 });
@@ -202,7 +205,7 @@ export function generateGrid(context) {
     }
     context["gridContainerElement"].innerHTML = "";
     if (!context.data || !context["gridContainerElement"]) {
-        context["gridContainerElement"].innerHTML = "<div style='text-align: center; font-weight: bold'>Δεν βρέθηκαν αποτελέσματα</div>";
+        context["gridContainerElement"].innerHTML = `<div style='text-align: center; font-weight: bold'>${context.t["no_results_found"]}</div>`;
         return;
     }
 
@@ -213,7 +216,7 @@ export function generateGrid(context) {
 
     const filters = document.createElement("div");
     filters.className = "filters";
-    filters.innerHTML = '<div class="title">Φίλτρα</div>';
+    filters.innerHTML = `<div class="title">${context.t["filters"]}</div>`;
 
     const selectedFiltersContainer = document.createElement("div");
     selectedFiltersContainer.className = "selected-filters";
@@ -235,7 +238,7 @@ export function generateGrid(context) {
             value: context.priceMinValue === 0 ? null :`${context.priceMinValue}${context.currency}`
         },
         {
-            type: context.urlParams["popup-category"],
+            type: context.urlParams["popupCategory"],
             value: context.selectedPopupCategory
         }
     ];
@@ -255,6 +258,7 @@ export function generateGrid(context) {
             clearFilter.innerHTML = "×";
             clearFilter.addEventListener("click", () => {
                 removeUrlParameter(filter.type);
+                initPagination(context);
                 redirectToSearchPage();
             });
             filterContainer.appendChild(clearFilter);
@@ -291,7 +295,7 @@ export function generateGrid(context) {
     let hasDr = context.data['dr'] !== undefined && context.data['dr']['hits'] !== undefined && context.data['dr']['hits']['hits'].length > 0;
     if (context.data.results.length === 0) {
         gridItems.style.width = "100%";
-        gridItems.innerHTML = "<div style='text-align: center; font-weight: bold'>Δεν βρέθηκαν αποτελέσματα</div>";
+        gridItems.innerHTML = `<div style='text-align: center; font-weight: bold'>${context.t["no_results_found"]}</div>`;
     } else {
         gridItems.className = "grid-items";
         context.data.results.forEach((item) => {
@@ -350,7 +354,7 @@ export function generateGrid(context) {
             if (context.addToCartCallback !== null && context.addToCartCallback !== undefined && typeof context.addToCartCallback === "function") {
                 const addToCart = document.createElement("button");
                 addToCart.className = "add-to-cart";
-                addToCart.innerHTML = "<span>Προσθήκη στο καλάθι</span>";
+                addToCart.innerHTML = `<span>${context.t["add_to_cart"]}</span>`;
                 addToCart.addEventListener("click", () => {
                     context.addToCartCallback(item);
                 })
@@ -360,7 +364,7 @@ export function generateGrid(context) {
             if (context.addToWishlistCallback !== null && context.addToWishlistCallback !== undefined && typeof context.addToWishlistCallback === "function") {
                 const addToWishlist = document.createElement("button");
                 addToWishlist.className = "add-to-wishlist";
-                addToWishlist.innerHTML = "<span>Προσθήκη στη λίστα επιθυμιών</span>";
+                addToWishlist.innerHTML = `<span>${context.t["add_to_wishlist"]}</span>`;
                 addToWishlist.addEventListener("click", () => {
                     context.addToWishlistCallback(item);
                 })
@@ -370,7 +374,7 @@ export function generateGrid(context) {
             if (context.addToCompareCallback !== null && context.addToCompareCallback !== undefined && typeof context.addToCompareCallback === "function") {
                 const addToCompare = document.createElement("button");
                 addToCompare.className = "add-to-compare";
-                addToCompare.innerHTML = "<span>Προσθήκη στη σύγκριση</span>";
+                addToCompare.innerHTML = `<span>${context.t["add_to_compare"]}</span>`;
                 addToCompare.addEventListener("click", () => {
                     context.addToCompareCallback(item);
                 })
@@ -390,12 +394,12 @@ export function generateGrid(context) {
     if (context.paginationType !== "numeric") {
         const pageNumber = document.createElement("span");
         const totalPges = Math.ceil(context.totalProductCount / context.gridProductsPerPage);
-        pageNumber.innerHTML = `Σελίδα ${context.gridPage} / ${totalPges}`;
+        pageNumber.innerHTML = `${context.t["page"]} ${context.gridPage} / ${totalPges}`;
         totals.appendChild(pageNumber);
     }
 
     const totalResults = document.createElement("span");
-    totalResults.innerHTML = `${context.totalProductCount} ${context.totalProductCount === 1 ? "αποτέλεσμα" : "αποτελέσματα"}`;
+    totalResults.innerHTML = `${context.totalProductCount} ${context.totalProductCount === 1 ? context.t["result_singular"] :  context.t["result_plural"]}`;
     totals.appendChild(totalResults);
 
     const sortingContainer = document.createElement("div");
@@ -403,6 +407,7 @@ export function generateGrid(context) {
     const sorting = document.createElement("select");
     sorting.id = "cb_sorting_select";
     sorting.addEventListener("change", (el) => {
+        initPagination(context);
         redirectToSearchPage('sort', el.target.value)
     });
     const currentSort = (new URL(window.location)).searchParams.get('sort');
@@ -417,6 +422,7 @@ export function generateGrid(context) {
     const order = document.createElement("select");
     order.id = "cb_order_select";
     order.addEventListener("change", (el) => {
+        initPagination(context);
         redirectToSearchPage('order', el.target.value)
     });
     const currentOrder = (new URL(window.location)).searchParams.get('order');
@@ -460,8 +466,8 @@ function renderProductFilters(filters, context) {
       <div class="side-panel-inner">
         <div class="side-panel-header">
           <div>
-            <h4 class="body-font">Φίλτρα <span class="thb-filter-count mobile-filter-count body-font">
-              <span class="facets__label">${context.totalProductCount} αποτελέσματα </span>
+            <h4 class="body-font">${context.t["filters"]} <span class="thb-filter-count mobile-filter-count body-font">
+              <span class="facets__label">${context.totalProductCount} ${context.t["result_plural"]} </span>
               <span class="loading-overlay">
                 <svg aria-hidden="true" focusable="false" role="presentation" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
                   <circle class="spinner-path" fill="none" stroke-width="6" cx="33" cy="33" r="30" stroke="var(--color-accent)"></circle>
@@ -481,7 +487,7 @@ function renderProductFilters(filters, context) {
               <!-- Price Filter Placeholder -->
               <collapsible-row data-index="1">
                 <details class="thb-filter js-filter" data-index="2" open="">
-                  <summary class="thb-filter-title"><span></span>Τιμή</summary>
+                  <summary class="thb-filter-title"><span></span>${context.t["price"]}</summary>
                   <div class="thb-filter-content collapsible__content">
                     <div id="price-filter-placeholder"></div>
                   </div>
@@ -490,7 +496,7 @@ function renderProductFilters(filters, context) {
               <!-- Categories Filter -->
               <collapsible-row data-index="2">
                 <details class="thb-filter js-filter" data-index="3" open="">
-                  <summary class="thb-filter-title"><span></span>Κατηγορίες</summary>
+                  <summary class="thb-filter-title"><span></span>${context.t["categories"]}</summary>
                   <div class="thb-filter-content collapsible__content">
                     <div id="categories-filter-placeholder"></div>
                   </div>
@@ -499,7 +505,7 @@ function renderProductFilters(filters, context) {
               <!-- Brand Filter -->
               <collapsible-row data-index="3">
                 <details class="thb-filter js-filter" data-index="4" open="">
-                  <summary class="thb-filter-title"><span></span>Μάρκα</summary>
+                  <summary class="thb-filter-title"><span></span>${context.t["brand"]}</summary>
                   <div class="thb-filter-content collapsible__content">
                     <div id="brand-filter-placeholder"></div>
                   </div>
@@ -514,102 +520,216 @@ function renderProductFilters(filters, context) {
 
     const priceFilterElement = addPriceFilter(context);
     const priceFilterPlaceholder = filterContainer.querySelector("#price-filter-placeholder");
-    priceFilterPlaceholder.appendChild(priceFilterElement);
+    priceFilterPlaceholder.replaceWith(priceFilterElement);
 
     const categoriesFilters = filters.find(f => f.filter_name === "categories");
     const tree = categoriesFilters.tree && categoriesFilters.tree[0] ? categoriesFilters.tree[0] : [];
     const categoriesFilterElement =  createCollapsibleCheckboxFilter(context, tree, categoriesFilters);
     const categoriesFilterPlaceholder = filterContainer.querySelector("#categories-filter-placeholder");
-    categoriesFilterPlaceholder.appendChild(categoriesFilterElement);
+    categoriesFilterPlaceholder.replaceWith(categoriesFilterElement);
 
     const brandFilters = filters.find(f => f.filter_name === "brand");
     const treeBrand = brandFilters.tree && brandFilters.tree[0] ? brandFilters.tree[0] : [];
     const brandFilterElement =  createCollapsibleCheckboxFilter(context, treeBrand, brandFilters);
     const brandFilterPlaceholder = filterContainer.querySelector("#brand-filter-placeholder");
-    brandFilterPlaceholder.appendChild(brandFilterElement);
+    brandFilterPlaceholder.replaceWith(brandFilterElement);
 
     return filterContainer;
 }
 
-export function createCollapsibleCheckboxFilter(context, tree, filter, rootCategory = false) {
-    const filterItemContainer = document.createElement("div");
 
-    if (tree.name && tree.name !== "Root Category") {
-        const details = document.createElement("details");
-        details.className = "thb-filter js-filter";
-        details.open = rootCategory; // Root category is open by default
+export function createSortAndCount(context) {
+    const sortCountContainer = document.createElement("div");
+    sortCountContainer.className = "thb-filter-sort-count";
 
-        const summary = document.createElement("summary");
-        summary.className = "thb-filter-title";
-        summary.innerHTML = `<span></span>${tree.name} (${tree.doc_count || 0})`;
-        details.appendChild(summary);
+    const sortContainer = document.createElement("div");
+    sortContainer.className = "thb-filter-sort";
 
-        const scrollShadow = document.createElement("scroll-shadow");
+    const selectWrapper = document.createElement("div");
+    selectWrapper.className = "select";
+
+    const sortLabel = document.createElement("label");
+    sortLabel.htmlFor = "SortByBar";
+    sortLabel.className = "visually-hidden";
+    sortLabel.textContent = context.t["sort_by"];
+
+    const sortSelect = document.createElement("select");
+    sortSelect.name = "sort_by";
+    sortSelect.className = "facet-filters__sort select__select resize-select";
+    sortSelect.id = "SortByBar";
+    sortSelect.setAttribute("aria-describedby", "a11y-refresh-page-message");
+    sortSelect.style.width = "94px";
+
+    const currentSort = new URL(window.location).searchParams.get("sort");
+    Object.entries(context.sortByList).forEach(([key, value]) => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = value;
+        option.selected = key === currentSort;
+        sortSelect.appendChild(option);
+    });
+
+    sortSelect.addEventListener("change", (event) => {
+        initPagination(context);
+        redirectToSearchPage("sort", event.target.value);
+    });
+
+    const selectArrow = document.createElement("div");
+    selectArrow.className = "select-arrow";
+
+    const arrowSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    arrowSvg.setAttribute("width", "8");
+    arrowSvg.setAttribute("height", "6");
+    arrowSvg.setAttribute("viewBox", "0 0 8 6");
+    arrowSvg.setAttribute("fill", "none");
+
+    const arrowPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    arrowPath.setAttribute("d", "M6.75 1.5L3.75 4.5L0.75 1.5");
+    arrowPath.setAttribute("stroke", "var(--color-body)");
+    arrowPath.setAttribute("stroke-width", "1.1");
+    arrowPath.setAttribute("stroke-linecap", "round");
+    arrowPath.setAttribute("stroke-linejoin", "round");
+
+    arrowSvg.appendChild(arrowPath);
+    selectArrow.appendChild(arrowSvg);
+
+    selectWrapper.appendChild(sortLabel);
+    selectWrapper.appendChild(sortSelect);
+    selectWrapper.appendChild(selectArrow);
+    sortContainer.appendChild(selectWrapper);
+
+    const countContainer = document.createElement("div");
+    countContainer.className = "thb-filter-count";
+    countContainer.id = "ProductCount";
+
+    const countLabel = document.createElement("span");
+    countLabel.className = "facets__label";
+    countLabel.textContent = `${context.totalProductCount} αποτελέσματα`;
+
+    const loadingOverlay = document.createElement("span");
+    loadingOverlay.className = "loading-overlay";
+
+    const spinnerSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    spinnerSvg.setAttribute("aria-hidden", "true");
+    spinnerSvg.setAttribute("focusable", "false");
+    spinnerSvg.setAttribute("role", "presentation");
+    spinnerSvg.setAttribute("viewBox", "0 0 66 66");
+
+    const spinnerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    spinnerCircle.setAttribute("fill", "none");
+    spinnerCircle.setAttribute("stroke-width", "6");
+    spinnerCircle.setAttribute("cx", "33");
+    spinnerCircle.setAttribute("cy", "33");
+    spinnerCircle.setAttribute("r", "30");
+    spinnerCircle.setAttribute("stroke", "var(--color-accent)");
+
+    spinnerSvg.appendChild(spinnerCircle);
+    loadingOverlay.appendChild(spinnerSvg);
+
+    countContainer.appendChild(countLabel);
+    countContainer.appendChild(loadingOverlay);
+
+    sortCountContainer.appendChild(sortContainer);
+    sortCountContainer.appendChild(countContainer);
+
+    return sortCountContainer;
+}
+
+
+export function createCollapsibleCheckboxFilter(context, tree, filter) {
+    const placeholder = document.createElement("div");
+    placeholder.id = `${filter.filter_name}-filter-content`;
+
+    function createCheckboxList(treeData) {
+        const rootCategory = treeData.name === "Root Category";
         const ul = document.createElement("ul");
         ul.className = `list-${filter.filter_name}`;
-
-        function createCheckboxList(treeData) {
+        if (!treeData.children) {
+            return ul;
+        }
+        treeData.children.forEach((item) => {
             const li = document.createElement("li");
+
+            const parentContainer = document.createElement("div");
+            parentContainer.className = "parent-container";
 
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.name = `filter.${filter.filter_name}`;
-            checkbox.value = treeData.name;
-            checkbox.id = `Filter-Mobile-${filter.filter_name}-${treeData.name}`;
+            checkbox.value = item.name;
+            checkbox.id = `Filter-Mobile-${filter.filter_name}-${item.name}`;
 
             const urlParams = new URLSearchParams(window.location.search);
             const filterInUrl = urlParams.get(filter.filter_name);
-            if (filterInUrl && treeData.name === filterInUrl) {
+            const popupCategoryInUrl = urlParams.get(context.urlParams["popupCategory"]);
+            if ((filterInUrl && item.name === filterInUrl) || (popupCategoryInUrl && item.name === popupCategoryInUrl)) {
                 checkbox.checked = true;
             }
 
-            checkbox.addEventListener("click", () => {
+            checkbox.addEventListener("click", (event) => {
+                event.stopPropagation();
                 if (checkbox.checked) {
-                    redirectToSearchPage(filter.filter_name, treeData.name);
+                    if (filter.filter_name === context.urlParams["categories"]) {
+                        if (rootCategory) {
+                            context.selectedPopupCategory = "";
+                            removeUrlParameter(context.urlParams["scoped"]);
+                            removeUrlParameter(context.urlParams["popupCategory"]);
+                            initPagination(context);
+                            redirectToSearchPage(filter.filter_name, item.name);
+                        } else {
+                            context.selectedCategory = "";
+                            context.selectedPopupCategory = item.name;
+                            removeUrlParameter(context.urlParams["categories"]);
+                            initPagination(context);
+                            redirectToSearchPage(context.urlParams["popupCategory"], item.name);
+                        }
+                    } else {
+                        initPagination(context);
+                        redirectToSearchPage(filter.filter_name, item.name);
+                    }
                 } else {
-                    removeUrlParameter(filter.filter_name);
+                    if (filter.filter_name === context.urlParams["categories"] && !rootCategory) {
+                        removeUrlParameter(context.urlParams["popupCategory"]);
+                    } else {
+                        removeUrlParameter(filter.filter_name);
+                    }
+                    initPagination(context);
+                    redirectToSearchPage();
                 }
             });
 
             const label = document.createElement("label");
             label.className = "facet-checkbox";
-            label.htmlFor = `Filter-Mobile-${filter.filter_name}-${treeData.name}`;
-            label.textContent = ` ${treeData.name} `;
-            label.style = `--bg-color: ${treeData.color || "#ccc"};`;
-            label.dataset.tooltip = `${treeData.name} (${treeData.doc_count || 0})`;
+            label.htmlFor = checkbox.id;
+            label.textContent = ` ${item.name} (${item.doc_count || 0}) `;
+            label.style = `--bg-color: ${item.color || "#ccc"};`;
+            label.dataset.tooltip = `${item.name} (${item.doc_count || 0})`;
 
-            li.appendChild(checkbox);
-            li.appendChild(label);
-            ul.appendChild(li);
+            parentContainer.appendChild(checkbox);
+            parentContainer.appendChild(label);
+            li.appendChild(parentContainer);
 
-            if (treeData.children && Array.isArray(treeData.children) && treeData.children.length > 0) {
-                treeData.children.forEach((child) => {
-                    ul.appendChild(createCheckboxList(child));
-                });
+            // Add nested categories if present
+            if (item.children && item.children.length > 0) {
+                const childrenContainer = document.createElement("div");
+                childrenContainer.className = "children-container";
+                childrenContainer.appendChild(createCheckboxList(item));
+                li.appendChild(childrenContainer);
             }
 
-            return li;
-        }
-
-        createCheckboxList(tree);
-        scrollShadow.appendChild(ul);
-        details.appendChild(scrollShadow);
-        filterItemContainer.appendChild(details);
-    }
-
-    if (tree.children && tree.children.length) {
-        const childrenContainer = document.createElement("div");
-        childrenContainer.className = "children-container";
-        tree.children.forEach((item) => {
-            childrenContainer.appendChild(
-                createCollapsibleCheckboxFilter(context, item, filter, tree.name === "Root Category")
-            );
+            ul.appendChild(li);
         });
-        filterItemContainer.appendChild(childrenContainer);
+
+        return ul;
     }
 
-    return filterItemContainer;
+    const scrollShadow = document.createElement("scroll-shadow");
+    scrollShadow.appendChild(createCheckboxList(tree));
+    placeholder.appendChild(scrollShadow);
+
+    return placeholder;
 }
+
 
 function renderBrandFilter(brandData) {
     if (!brandData.tree || brandData.tree.length === 0 || !brandData.tree[0].children) {
@@ -617,8 +737,8 @@ function renderBrandFilter(brandData) {
     }
     return brandData.tree[0].children.map(brand => `
     <div>
-      <input type="checkbox" name="filter.v.brand" value="${brand.name}" id="Filter-Mobile-μάρκα-${brand.name}">
-      <label for="Filter-Mobile-μάρκα-${brand.name}">${brand.name}</label>
+      <input type="checkbox" name="filter.v.brand" value="${brand.name}" id="Filter-Mobile-brand-${brand.name}">
+      <label for="Filter-Mobile-brand-${brand.name}">${brand.name}</label>
     </div>
   `).join('');
 }
@@ -629,7 +749,7 @@ function renderProductGrid(data, context) {
     container.className = "shopify-section";
     container.innerHTML = `
       <div class="collection-banner--description">
-         <p>Βρέθηκαν ${context.totalProductCount} αποτελέσματα για “${context["inputElement"].value.trim()}”</p>
+         <p>${context.t["results_found"]} ${context.totalProductCount} ${context.t["results_for"]} “${context["inputElement"].value.trim()}”</p>
       </div>  
       <div id="filters-container"></div>
       <div class="row full-width-row">
@@ -639,22 +759,21 @@ function renderProductGrid(data, context) {
               <div class="sidebar-container facets--drawer results--">
                  <div>
                       <facet-filters-form class="facets--bar">
-                          <form id="FacetFiltersForm-bar" class="facets__form"><input type="hidden" name="q" value="box">
-                              <input name="options[prefix]" type="hidden" value="last">
+                          <div id="FacetFiltersForm-bar" class="facets__form">
                               <div>
                                   <a href="#SideFilters" class="facets-toggle" id="Facets-Toggle">
                                       <svg width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                                           <path d="M6.55372 7.58824L1 7.58825M11.1818 7.58825L8.40496 7.58824M2.85124 2.41177L1 2.41173M11.1818 2.41173L4.70248 2.41177M4.70248 1V3.82352M8.40496 9V6.17648" stroke="var(--color-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
                                       </svg>
-                                      Φίλτρα
+                                      ${context.t["filters"]}
                                   </a>
                               </div>
-                          </form>
-                          <facet-remove class="active-facets">
-                              <a href="?q=box&amp;options%5Bprefix%5D=last&amp;sort_by=relevance" class="active-facets__button-remove text-button">Απαλοιφή όλων</a>
-                          </facet-remove>
+                              <div id="sort-count-container">
+                                <!-- Content will be conditionally added here -->
+                              </div>
+                          </div>
                       </facet-filters-form>
-                        <div id="conditionalContent">
+                        <div id="conditional-content">
                             <!-- Content will be conditionally added here -->
                         </div>
                       </div>
@@ -664,7 +783,7 @@ function renderProductGrid(data, context) {
         </div>
       </div>
     `;
-    const conditionalContent = container.querySelector("#conditionalContent");
+    const conditionalContent = container.querySelector("#conditional-content");
 
     if (data.length === 0) {
         conditionalContent.innerHTML = `
@@ -687,7 +806,7 @@ function renderProductGrid(data, context) {
                 <path d="M149.467 7.01943L152.707 3.11465C153.161 2.55128 153.082 1.73536 152.509 1.28854C151.936 0.841726 151.106 0.919433 150.652 1.48281L147.511 5.30987L144.607 1.57994C144.132 1.1137 143.401 1.05542 142.868 1.46338C142.335 1.85192 142.177 2.57071 142.512 3.13408L145.535 7L142.295 10.8853C141.841 11.4487 141.92 12.2646 142.473 12.7115C143.046 13.1583 143.876 13.0806 144.33 12.5172L147.471 8.74841L150.336 12.4589C150.593 12.7892 150.968 12.964 151.383 12.964C151.679 12.964 151.956 12.8669 152.173 12.692C152.45 12.4783 152.628 12.1675 152.687 11.8373C152.726 11.4876 152.647 11.1573 152.43 10.8853L149.467 7.01943Z" fill="var(--color-accent)"></path>
             </svg>
             <p>
-                Δε βρέθηκαν αποτελέσματα για “${context["inputElement"].value.trim()}”. Παρακαλούμε ελέγξτε την ορθογραφία ή χρησιμοποιήστε μια διαφορετική λέξη.
+                ${context.t["no_results_for"]} “${context["inputElement"].value.trim()}”. ${context.t["please_check_spelling_or_use_different_word"]}.
             </p>
         </div>
         `;
@@ -711,7 +830,7 @@ function renderProductGrid(data, context) {
                           <span style="padding-right: 5px;">
                             <img src="https://cdn.shopify.com/s/files/1/0702/0206/5153/files/ns-search.svg?v=1718799016" alt="wishlist-icon" width="16px" height="16px">
                           </span>
-                          <span>Γρήγορη προβολή</span>
+                          <span>${context.t["quick_view"]}</span>
                         </quick-view>
                       </figure>
                       <div class="product-card-info">
@@ -731,13 +850,21 @@ function renderProductGrid(data, context) {
                   </li>
                 `).join('')}
               </ul>
+              <div id="pagination-container"></div>
         `;
     }
 
-    // Render the product filters
     const productFilterElement = renderProductFilters(context.data.filters, context);
     const productFilterPlaceholder = container.querySelector("#filters-container");
-    productFilterPlaceholder.appendChild(productFilterElement);
+    if (productFilterPlaceholder) productFilterPlaceholder.appendChild(productFilterElement);
+
+    const paginationElement = createNumericPaginationForShopify(context);
+    const paginationPlaceholder = container.querySelector("#pagination-container");
+    if (paginationPlaceholder) paginationPlaceholder.appendChild(paginationElement);
+
+    const sortingElement = createSortAndCount(context);
+    const sortingPlaceholder = container.querySelector("#sort-count-container");
+    sortingPlaceholder.replaceWith(sortingElement);
 
     return container;
 }
@@ -754,15 +881,18 @@ export function createFilterWithChildren(context, tree, filter, rootCategory = f
                 if (rootCategory) {
                     context.selectedPopupCategory = "";
                     removeUrlParameter(context.urlParams["scoped"]);
-                    removeUrlParameter(context.urlParams["popup-category"]);
+                    removeUrlParameter(context.urlParams["popupCategory"]);
+                    initPagination(context);
                     redirectToSearchPage(filter.filter_name, tree.name);
                 } else {
                     context.selectedCategory = "";
                     context.selectedPopupCategory = tree.name;
                     removeUrlParameter(context.urlParams["categories"]);
+                    initPagination(context);
                     redirectToSearchPage('popup-category', tree.name);
                 }
             } else {
+                initPagination(context);
                 redirectToSearchPage(filter.filter_name, tree.name);
             }
 
@@ -823,6 +953,7 @@ export function typeaheadList(context) {
             element.addEventListener("click", () => {
                 context["inputElement"].value = item;
                 clearData(context, false);
+                initPagination(context);
                 fetchData(context, item, true).then(() => {
                     updateGridPage(context);
                 });
@@ -850,7 +981,8 @@ export function relativeCategories(context) {
             element.textContent = `${item.name} (${item.doc_count})`;
             element.addEventListener("click", () => {
                 removeUrlParameter(context.urlParams["categories"]);
-                redirectToSearchPage(context.urlParams["popup-category"], item.name);
+                initPagination(context);
+                redirectToSearchPage(context.urlParams["popupCategory"], item.name);
             });
             list.appendChild(element);
         });
@@ -880,6 +1012,7 @@ export function updateBrandContainer(context) {
             const element = document.createElement("div");
             element.textContent = `${item.key} (${item.doc_count})`;
             element.addEventListener("click", () => {
+                initPagination(context);
                 redirectToSearchPage(context.urlParams["brand"], item.key);
             });
             list.appendChild(element);
@@ -953,6 +1086,7 @@ export function recentSearches(context) {
             const element = document.createElement("div");
             element.textContent = `${item.search_term}`;
             element.addEventListener("click", () => {
+                initPagination(context);
                 redirectToSearchPage(context.urlParams["q"], item.search_term);
             });
             list.appendChild(element);

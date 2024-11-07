@@ -1,4 +1,10 @@
-import {logPlugin} from "@babel/preset-env/lib/debug";
+import el from '../locale/el.js';
+import en from '../locale/en.js';
+
+const translations = {
+    el,
+    en,
+};
 
 /**
  * Validates if a string is a valid URL.
@@ -226,7 +232,7 @@ export function clearSelectedFilters(context) {
     removeUrlParameter(context.urlParams["maxPrice"]);
     removeUrlParameter(context.urlParams["minPrice"]);
     removeUrlParameter(context.urlParams["categories"]);
-    removeUrlParameter(context.urlParams["popup-category"]);
+    removeUrlParameter(context.urlParams["popupCategory"]);
     removeUrlParameter(context.urlParams["brand"]);
     context.selectedCategory = "";
     context.selectedPopupCategory = "";
@@ -258,6 +264,16 @@ export function usefulAutocompleteTerms(context, list, query) {
         .map(term => {
             return removeAccentsAndLowerCase(term);
         });
+}
+
+/**
+ * Loads locale-specific translations if the file exists.
+ * @param {Object} context - The SearchCore instance.
+ * @param {string} locale - The locale to load.
+ * @returns {Promise} Resolves once translations are loaded.
+ */
+export async function loadLocaleTranslations(context, locale) {
+    context.t = translations[locale] || translations[context.defaultLocale];
 }
 
 export function sliceAutocompleteTermsInLevels(context) {
@@ -308,4 +324,10 @@ export function selectedSortingOrder(context) {
     } else {
         return Object.keys(context.sortOrderList)[0];
     }
+}
+
+export function initPagination(context) {
+    context.page = 0;
+    context.gridPage = 1;
+    removeUrlParameter(context.urlParams["page"]);
 }

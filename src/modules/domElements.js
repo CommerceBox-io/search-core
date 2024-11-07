@@ -116,6 +116,155 @@ export function createNumericPagination(context) {
     return pagination;
 }
 
+export function createNumericPaginationForShopify(context) {
+    const paginationTheme = document.createElement("pagination-theme");
+    paginationTheme.className = "pagination pagination-type--paginated";
+
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const columns = document.createElement("div");
+    columns.className = "small-12 columns";
+
+    const pageNumbers = document.createElement("div");
+    pageNumbers.className = "page-numbers nav-links";
+
+    const totalPages = Math.ceil(context.totalProductCount / context.gridProductsPerPage);
+    const query = context.query || ""; // Ensure query is defined
+
+    // Function to create page link
+    function createPageLink(page) {
+        const pageLink = document.createElement("span");
+        pageLink.className = page === context.gridPage ? "page current" : "page";
+
+        if (page === context.gridPage) {
+            pageLink.textContent = page;
+        } else {
+            const link = document.createElement("a");
+            link.href = `/search?page=${page}&q=${encodeURIComponent(query)}`;
+            link.title = "";
+            link.textContent = page;
+            link.addEventListener("click", (event) => {
+                event.preventDefault();
+                context.page = (page - 1) * context.gridProductsPerPage;
+                fetchData(context, context["inputElement"].value, true).then(() => {
+                    context.gridPage = page;
+                    updateGridPage(context);
+                    updateUrlParameter(context.urlParams["page"], page.toString());
+                });
+            });
+            pageLink.appendChild(link);
+        }
+
+        return pageLink;
+    }
+
+    // Create previous arrow if not on the first page
+    if (context.gridPage > 1) {
+        const prev = document.createElement("span");
+        prev.className = "prev";
+
+        const prevLink = document.createElement("a");
+        prevLink.href = `/search?page=${context.gridPage - 1}&q=${encodeURIComponent(query)}`;
+        prevLink.title = "";
+        prevLink.addEventListener("click", (event) => {
+            event.preventDefault();
+            context.page = (context.gridPage - 2) * context.gridProductsPerPage;
+            fetchData(context, context["inputElement"].value, true).then(() => {
+                context.gridPage -= 1;
+                updateGridPage(context);
+                updateUrlParameter(context.urlParams["page"], (context.gridPage).toString());
+            });
+        });
+
+        const svgLeft = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svgLeft.setAttribute("width", "12");
+        svgLeft.setAttribute("height", "8");
+        svgLeft.setAttribute("viewBox", "0 0 12 8");
+        svgLeft.setAttribute("fill", "none");
+
+        const pathLeft = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathLeft.setAttribute("d", "M11 4H6H1M1 4L4.28467 1M1 4L4.28467 7");
+        pathLeft.setAttribute("stroke", "var(--color-accent)");
+        pathLeft.setAttribute("stroke-linecap", "round");
+        pathLeft.setAttribute("stroke-linejoin", "round");
+
+        svgLeft.appendChild(pathLeft);
+        prevLink.appendChild(svgLeft);
+        prev.appendChild(prevLink);
+        pageNumbers.appendChild(prev);
+    }
+
+    // Show first page and ellipsis if necessary
+    if (context.gridPage > 3) {
+        pageNumbers.appendChild(createPageLink(1));
+        if (context.gridPage > 4) {
+            const dots = document.createElement("span");
+            dots.className = "deco";
+            dots.textContent = "…";
+            pageNumbers.appendChild(dots);
+        }
+    }
+
+    // Show pages around the current page
+    for (let i = Math.max(1, context.gridPage - 2); i <= Math.min(totalPages, context.gridPage + 2); i++) {
+        pageNumbers.appendChild(createPageLink(i));
+    }
+
+    // Show last page and ellipsis if necessary
+    if (context.gridPage < totalPages - 2) {
+        if (context.gridPage < totalPages - 3) {
+            const dots = document.createElement("span");
+            dots.className = "deco";
+            dots.textContent = "…";
+            pageNumbers.appendChild(dots);
+        }
+        pageNumbers.appendChild(createPageLink(totalPages));
+    }
+
+    // Create next arrow if not on the last page
+    if (context.gridPage < totalPages) {
+        const next = document.createElement("span");
+        next.className = "next";
+
+        const nextLink = document.createElement("a");
+        nextLink.href = `/search?page=${context.gridPage + 1}&q=${encodeURIComponent(query)}`;
+        nextLink.title = "";
+        nextLink.addEventListener("click", (event) => {
+            event.preventDefault();
+            context.page = context.gridPage * context.gridProductsPerPage;
+            fetchData(context, context["inputElement"].value, true).then(() => {
+                context.gridPage += 1;
+                updateGridPage(context);
+                updateUrlParameter(context.urlParams["page"], (context.gridPage).toString());
+            });
+        });
+
+        const svgRight = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svgRight.setAttribute("width", "12");
+        svgRight.setAttribute("height", "8");
+        svgRight.setAttribute("viewBox", "0 0 12 8");
+        svgRight.setAttribute("fill", "none");
+
+        const pathRight = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathRight.setAttribute("d", "M1 4H6H11M11 4L7.71533 1M11 4L7.71533 7");
+        pathRight.setAttribute("stroke", "var(--color-accent)");
+        pathRight.setAttribute("stroke-linecap", "round");
+        pathRight.setAttribute("stroke-linejoin", "round");
+
+        svgRight.appendChild(pathRight);
+        nextLink.appendChild(svgRight);
+        next.appendChild(nextLink);
+        pageNumbers.appendChild(next);
+    }
+
+    columns.appendChild(pageNumbers);
+    row.appendChild(columns);
+    paginationTheme.appendChild(row);
+
+    return paginationTheme;
+}
+
 /**
  * Updates the position of the text measurer span.
  * @param {object} context - The context in which this function operates.
@@ -142,7 +291,7 @@ export function addPriceFilter(context) {
 
     const priceHighestLabel = document.createElement("div");
     priceHighestLabel.className = "price-highest";
-    priceHighestLabel.textContent = `Η υψηλότερη τιμή είναι ${formatPrice(context.maxPrice)}`;
+    priceHighestLabel.textContent = `${context.t["highest_price_is"]} ${formatPrice(context.maxPrice)}`;
     priceFilter.appendChild(priceHighestLabel);
 
     const inputsContainer = document.createElement("div");
