@@ -20,5 +20,7 @@ export default {
     "results_for": "αποτελέσματα για",
     "please_check_spelling_or_use_different_word": "Παρακαλούμε ελέγξτε την ορθογραφία ή χρησιμοποιήστε μια διαφορετική λέξη",
     "no_results_for": "Δεν βρέθηκαν αποτελέσματα για",
-    "quick_view": "Γρήγορη προβολή"
+    "quick_view": "Γρήγορη προβολή",
+    "min_price": "Ελαχιστη τιμή",
+    "max_price": "Μέγιστη τιμή"
 };

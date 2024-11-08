@@ -192,6 +192,7 @@ export function updateUrlParameter(param, value) {
  * @param {string} param - The URL parameter to remove.
  */
 export function removeUrlParameter(param) {
+    console.log(param)
     const url = new URL(window.location);
     url.searchParams.delete(param);
     window.history.pushState({path: url.href}, "", url.href);
@@ -270,10 +271,15 @@ export function usefulAutocompleteTerms(context, list, query) {
  * Loads locale-specific translations if the file exists.
  * @param {Object} context - The SearchCore instance.
  * @param {string} locale - The locale to load.
- * @returns {Promise} Resolves once translations are loaded.
  */
-export async function loadLocaleTranslations(context, locale) {
+export function loadLocaleTranslations(context, locale) {
     context.t = translations[locale] || translations[context.defaultLocale];
+    if (context.translations && Object.keys(context.translations).length > 0) {
+        context.t = {
+            ...context.t,
+            ...context.translations
+        }
+    }
 }
 
 export function sliceAutocompleteTermsInLevels(context) {

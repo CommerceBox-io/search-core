@@ -20,5 +20,7 @@ export default {
     "results_for": "results for",
     "please_check_spelling_or_use_different_word": "Please check the spelling or use a different word",
     "no_results_for": "No results for",
-    "quick_view": "Quick View"
+    "quick_view": "Quick View",
+    "min_price": "Min price",
+    "max_price": "Max price",
 };

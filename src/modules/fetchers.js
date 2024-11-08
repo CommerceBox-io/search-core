@@ -192,7 +192,7 @@ export function fetchSettings(context) {
         .then((data) => {
             if (data.code === 200) {
                 context.settings = data.result;
-                fetchSettingsEndedEvent();
+                fetchSettingsEndedEvent(data.result);
             }
         })
         .catch((error) => {

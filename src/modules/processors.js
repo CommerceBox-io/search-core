@@ -757,28 +757,29 @@ function renderProductGrid(data, context) {
           <div class="collection-container section-spacing-bottom">
             <div id="ProductGridContainer">
               <div class="sidebar-container facets--drawer results--">
-                 <div>
-                      <facet-filters-form class="facets--bar">
-                          <div id="FacetFiltersForm-bar" class="facets__form">
-                              <div>
-                                  <a href="#SideFilters" class="facets-toggle" id="Facets-Toggle">
-                                      <svg width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                          <path d="M6.55372 7.58824L1 7.58825M11.1818 7.58825L8.40496 7.58824M2.85124 2.41177L1 2.41173M11.1818 2.41173L4.70248 2.41177M4.70248 1V3.82352M8.40496 9V6.17648" stroke="var(--color-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
-                                      </svg>
-                                      ${context.t["filters"]}
-                                  </a>
-                              </div>
-                              <div id="sort-count-container">
-                                <!-- Content will be conditionally added here -->
-                              </div>
-                          </div>
-                      </facet-filters-form>
-                        <div id="conditional-content">
-                            <!-- Content will be conditionally added here -->
-                        </div>
-                      </div>
-                 </div>
-              </div>
+                <div>
+                    <facet-filters-form class="facets--bar">
+                        <div id="FacetFiltersForm-bar" class="facets__form">
+                    <div>
+                      <a href="#SideFilters" class="facets-toggle" id="Facets-Toggle">
+                          <svg width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M6.55372 7.58824L1 7.58825M11.1818 7.58825L8.40496 7.58824M2.85124 2.41177L1 2.41173M11.1818 2.41173L4.70248 2.41177M4.70248 1V3.82352M8.40496 9V6.17648" stroke="var(--color-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
+                          </svg>
+                          ${context.t["filters"]}
+                      </a>
+                    </div>
+                    <div id="sort-count-container">
+                    <!-- Content will be conditionally added here -->
+                    </div>
+                    </div>
+                        <div id="filter-remove-container"></div>
+                    </facet-filters-form>
+                    <div id="conditional-content">
+                        <!-- Content will be conditionally added here -->
+                    </div>
+                  </div>
+                </div>
+             </div>
           </div>
         </div>
       </div>
@@ -858,15 +859,108 @@ function renderProductGrid(data, context) {
     const productFilterPlaceholder = container.querySelector("#filters-container");
     if (productFilterPlaceholder) productFilterPlaceholder.appendChild(productFilterElement);
 
-    const paginationElement = createNumericPaginationForShopify(context);
-    const paginationPlaceholder = container.querySelector("#pagination-container");
-    if (paginationPlaceholder) paginationPlaceholder.appendChild(paginationElement);
+    const filterRemoveElement = createActiveFilters(context);
+    const filterRemovePlaceholder = container.querySelector("#filter-remove-container");
+    if (filterRemovePlaceholder) filterRemovePlaceholder.replaceWith(filterRemoveElement);
 
     const sortingElement = createSortAndCount(context);
     const sortingPlaceholder = container.querySelector("#sort-count-container");
     sortingPlaceholder.replaceWith(sortingElement);
 
+    const paginationElement = createNumericPaginationForShopify(context);
+    const paginationPlaceholder = container.querySelector("#pagination-container");
+    if (paginationPlaceholder) paginationPlaceholder.appendChild(paginationElement);
+
     return container;
+}
+
+export function createActiveFilters(context) {
+    const facetRemove = document.createElement("facet-remove");
+    facetRemove.className = "active-facets";
+    const selectedFilters = [
+        {
+            type: context.urlParams["categories"],
+            value: context.selectedCategory,
+            label: context.selectedCategory
+        },
+        {
+            type: context.urlParams["brand"],
+            value: context.selectedBrand,
+            label: context.selectedBrand
+        },
+        {
+            type: context.urlParams["maxPrice"],
+            value: context.priceMaxValue === 0 || context.priceMaxValue === context.maxPrice ? null : `${context.priceMaxValue} ${context.currency}`,
+            label: `${context.t["max_price"]}: ${context.priceMaxValue} €`
+        },
+        {
+            type: context.urlParams["minPrice"],
+            value: context.priceMinValue === 0 ? null : `${context.priceMinValue} ${context.currency}`,
+            label: `${context.t["min_price"]}: ${context.priceMinValue} €`
+        },
+        {
+            type: context.urlParams["popupCategory"],
+            value: context.selectedPopupCategory,
+            label: context.selectedPopupCategory
+        }
+    ];
+    console.log(selectedFilters)
+
+    selectedFilters.forEach((filter) => {
+        if (filter.value) {
+            const filterLink = document.createElement("span");
+            // filterLink.href = `#`;
+            filterLink.className = "active-facets__button";
+            filterLink.textContent = filter.label;
+
+            const clearIcon = document.createElement("span");
+            const svgIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svgIcon.setAttribute("width", "7");
+            svgIcon.setAttribute("height", "7");
+            svgIcon.setAttribute("viewBox", "0 0 7 7");
+            svgIcon.setAttribute("fill", "none");
+
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", "M6.4731 6.875C6.60027 6.875 6.72968 6.82592 6.82561 6.72775C7.01972 6.53364 7.01972 6.21682 6.82561 6.02049L4.67929 3.87416L6.82561 1.72784C7.01972 1.53373 7.01972 1.21692 6.82561 1.02058C6.63151 0.826473 6.31469 0.826473 6.11835 1.02058L3.97203 3.1669L1.82794 1.02504C1.63383 0.830936 1.31701 0.830936 1.12068 1.02504C0.926571 1.21915 0.926571 1.53596 1.12068 1.7323L3.267 3.87863L1.12291 6.02049C0.928802 6.21459 0.928802 6.53141 1.12291 6.72775C1.22108 6.82592 1.34825 6.875 1.47542 6.875C1.6026 6.875 1.732 6.82592 1.82794 6.72775L3.97426 4.58142L6.12058 6.72775C6.21652 6.82592 6.34593 6.875 6.4731 6.875Z");
+            path.setAttribute("fill", "var(--color-accent)");
+
+            svgIcon.appendChild(path);
+            clearIcon.appendChild(svgIcon);
+
+            // Event listener to remove filter on click
+            filterLink.addEventListener("click", (event) => {
+                event.preventDefault();
+                removeUrlParameter(filter.type);
+                initPagination(context);
+                redirectToSearchPage();
+            });
+
+            filterLink.appendChild(clearIcon);
+            facetRemove.appendChild(filterLink);
+        }
+    });
+
+    // Clear all filters link
+    const clearAllLink = document.createElement("span");
+    // clearAllLink.href = `#`;
+    clearAllLink.className = "active-facets__button-remove text-button";
+    clearAllLink.textContent = "Απαλοιφή όλων";
+    clearAllLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        [
+            context.urlParams["categories"],
+            context.urlParams["brand"],
+            context.urlParams["maxPrice"],
+            context.urlParams["minPrice"],
+            context.urlParams["popupCategory"]
+        ].forEach(removeUrlParameter);
+        initPagination(context);
+        redirectToSearchPage();
+    });
+
+    facetRemove.appendChild(clearAllLink);
+
+    return facetRemove;
 }
 
 export function createFilterWithChildren(context, tree, filter, rootCategory = false) {

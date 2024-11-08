@@ -28,6 +28,7 @@ class SearchCore {
      * @param {string | null} [options.locale=""] - The locale.
      * @param {string | null} [options.platform=""] - The platform.
      * @param {string | null} [options.sorting=""] - The sorting.
+     * @param {Object} [options.translations={}] - The translations.
      */
     constructor({
                     apiEndpoint,
@@ -45,7 +46,8 @@ class SearchCore {
                     user = "",
                     locale = null,
                     platform = null,
-                    sorting = null
+                    sorting = null,
+                    translations = null
                 }) {
         this.defaultLocale = "el"
         this.t = {};
@@ -59,16 +61,15 @@ class SearchCore {
         this.platform = platform;
         this.locale = locale ? locale : this.defaultLocale;
         this.sorting = sorting;
+        this.translations = translations;
 
-        loadLocaleTranslations(this, this.locale).finally(() => {
-            console.log(this.t)
-            getSettings(this).finally(() => {
-                initializeUser(this, uuid);
-                initializeCallbacks(this, addToCartCallback, addToWishlistCallback, addToCompareCallback);
-                initializeProperties(this, layoutTemplate, externalGridSelector, searchPageRedirect, segment_id, segment_specialty_id, url_params);
-                initializeElements(this);
-                init(this);
-            });
+        getSettings(this).finally(() => {
+            loadLocaleTranslations(this, this.locale);
+            initializeUser(this, uuid);
+            initializeCallbacks(this, addToCartCallback, addToWishlistCallback, addToCompareCallback);
+            initializeProperties(this, layoutTemplate, externalGridSelector, searchPageRedirect, segment_id, segment_specialty_id, url_params);
+            initializeElements(this);
+            init(this);
         });
     }
 
