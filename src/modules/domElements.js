@@ -1,6 +1,6 @@
 import { fetchData } from "./fetchers";
 import { updateGridPage } from "./processors";
-import {updateUrlParameter, formatPrice, redirectToSearchPage} from "./utils";
+import { updateUrlParameter, formatPrice, redirectToSearchPage } from "./utils";
 import {forEach} from "lodash";
 
 /**
