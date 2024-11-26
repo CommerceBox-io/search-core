@@ -28,7 +28,7 @@ class SearchCore {
      * @param {string | null} [options.locale=""] - The locale.
      * @param {string | null} [options.platform=""] - The platform.
      * @param {string | null} [options.sorting=""] - The sorting.
-     * @param {Object} [options.translations={}] - The translations.
+     * @param {Object | null} [options.translations={}] - The translations.
      */
     constructor({
                     apiEndpoint,
@@ -42,7 +42,7 @@ class SearchCore {
                     uuid = "",
                     segment_id = "",
                     segment_specialty_id = "",
-                    url_params = {},
+                    urlParams = {},
                     user = "",
                     locale = null,
                     platform = null,
@@ -67,7 +67,7 @@ class SearchCore {
             loadLocaleTranslations(this, this.locale);
             initializeUser(this, uuid);
             initializeCallbacks(this, addToCartCallback, addToWishlistCallback, addToCompareCallback);
-            initializeProperties(this, layoutTemplate, externalGridSelector, searchPageRedirect, segment_id, segment_specialty_id, url_params);
+            initializeProperties(this, layoutTemplate, externalGridSelector, searchPageRedirect, segment_id, segment_specialty_id, urlParams);
             initializeElements(this);
             init(this);
         });

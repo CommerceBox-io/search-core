@@ -15,7 +15,8 @@ import {
     usefulAutocompleteTerms,
     sliceAutocompleteTermsInLevels,
     selectedSortingBy,
-    selectedSortingOrder
+    selectedSortingOrder,
+    createAvailableFilters
 } from './utils';
 import {
     fetchDataEndedEvent,
@@ -24,6 +25,7 @@ import {
     fetchSettingsEndedEvent,
     fetchMaxPriceEndedEvent
 } from './events';
+import {forEach} from "lodash";
 
 /**
  * Loads the given HTML from a URL
@@ -39,7 +41,6 @@ export function fetchTemplate(context, url) {
                     console.log("Template fetched:", html)
                 }
                 loadTemplate(context, html);
-                fetchTemplateEndedEvent();
             });
     } catch (error) {
         console.error("Error fetching template:", error);
@@ -129,6 +130,12 @@ export function fetchData(context, query, isGrid = false) {
         locale: context.locale
     };
 
+    forEach(context.availableFilters, (value, key) => {
+        if (value) {
+            props[`filt_${key}`] = value;
+        }
+    })
+
     return fetch(context.apiEndpoint, {
         method: "POST",
         headers: {
@@ -142,8 +149,8 @@ export function fetchData(context, query, isGrid = false) {
                 return;
             }
             context.data = data.result;
-            context.maxPrice = Math.ceil(data.result.max_price);
-            context.minPrice = data.result.min_price ? Math.floor(data.result.min_price) : 0;
+            context.maxPrice = Math.ceil(context.data.max_price);
+            context.minPrice = context.data.min_price ? Math.floor(context.data.min_price) : 0;
             // TODO: uncomment this when
             //  fetchMaxPrice is removed
             // if (context.priceMaxValue > context.maxPrice) {
@@ -157,20 +164,21 @@ export function fetchData(context, query, isGrid = false) {
             //     context.priceMinValue = context.minPrice;
             //     updateUrlParameter(context.urlParams["minPrice"], context.priceMinValue.toString());
             // }
-            context.totalProductCount = data.result.total_count;
-            context.currentProductCount = data.result.results.length;
+            context.totalProductCount = context.data.total_count;
+            context.currentProductCount = context.data.results.length;
             addCustomToFilters(context);
             updateTitles(context);
             typeaheadList(context);
             relativeCategories(context);
+            createAvailableFilters(context, context.data.filters);
             updateBrandContainer(context);
             updateBannerContainer(context);
             recentSearches(context);
-            updateUrlParameter(context.urlParams["q"], query);
             context.completedSearch = 0;
             fetchDataEndedEvent();
         })
         .catch((error) => {
+            context.data = { results: [], total_count: 0, filters: [], min_price: 0, max_price: 0 };
             console.error("Error fetching data:", error)
         });
 }

@@ -21,6 +21,7 @@ import {
 } from './processors';
 import {debugQuery, updateMeasurerPosition,} from './domElements';
 import {Html5Qrcode} from "html5-qrcode";
+import {fetchTemplateEndedEvent} from "./events";
 
 /**
  * Initializes various properties of the SearchCore instance.
@@ -91,16 +92,30 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     context.selectedAutocompleteTermPerWord = [];
     context.originalAutocompleteWordsList = [];
     context.originalAutocompleteWords = [];
+    context.availableFilters = {};
 
     context.sortOrderList = {
+        desc: context.t["descending"],
         asc: context.t["ascending"],
-        desc: context.t["descending"]
     };
-    context.sortByList = {
-        price: context.t["price"],
-        "top-sales": context.t["sales"],
-        date: context.t["date"],
-    };
+
+    context.sortByList = [
+        {
+            key: "price",
+            value: context.t["price"],
+            format: null
+        },
+        {
+            key: "top-sales",
+            value: context.t["sales"],
+            format: null
+        },
+        {
+            key: "date",
+            value: context.t["date"],
+            format: null
+        }
+    ];
 
     if (context.sorting && Object.keys(context.sorting).length > 0 && context.sorting[context.locale]) {
         context.sortByList = context.sorting[context.locale];
@@ -242,37 +257,27 @@ export function initializeScopedSearchDropdown(context) {
 export function initializeSearchFromUrl(context) {
     const urlParams = new URLSearchParams(window.location.search);
     const q = urlParams.get(context.urlParams["q"]);
-    const categories = urlParams.get(context.urlParams["categories"]);
-    const scoped = urlParams.get(context.urlParams["scoped"]);
-    const brand = urlParams.get(context.urlParams["brand"]);
-    const maxPrice = urlParams.get(context.urlParams["maxPrice"]);
-    const minPrice = urlParams.get(context.urlParams["minPrice"]);
-    const popupCategory = urlParams.get(context.urlParams["popupCategory"]);
 
-    if (categories) {
-        context.selectedCategory = categories;
-    }
-
-    if (popupCategory) {
-        context.selectedPopupCategory = popupCategory;
-    }
-
-    if (scoped) {
-        context["scopedSearchDropdown"].value = scoped;
-        context.selectedScope = scoped;
-    }
-
-    if (brand) {
-        context.selectedBrand = brand;
-    }
-
-    if (maxPrice) {
-        context.priceMaxValue = parseInt(maxPrice);
-    }
-
-    if (minPrice) {
-        context.priceMinValue = parseInt(minPrice);
-    }
+    urlParams.forEach((value, key) => {
+        if (context.urlParams["q"] === key) {
+            context["inputElement"].value = value;
+        } else if (context.urlParams["maxPrice"] === key) {
+            context.priceMaxValue = parseInt(value);
+        } else if (context.urlParams["minPrice"] === key) {
+            context.priceMinValue = parseInt(value);
+        } else if (context.urlParams["scoped"] === key) {
+            context["scopedSearchDropdown"].value = value;
+            context.selectedScope = value;
+        } else if (context.urlParams["brand"] === key) {
+            context.selectedBrand = value;
+        } else if (context.urlParams["popupCategory"] === key) {
+            context.selectedPopupCategory = value;
+        } else if (context.urlParams["categories"] === key) {
+            context.selectedCategory = value;
+        } else {
+            context.availableFilters[key] = value;
+        }
+    });
 
     if (q) {
         context["inputElement"].value = q;
@@ -281,6 +286,8 @@ export function initializeSearchFromUrl(context) {
             updateGridPage(context);
         });
     }
+
+
 }
 
 /**
@@ -323,6 +330,7 @@ export function loadTemplate(context, html) {
         initializeSearchFromUrl(context);
         checkVoiceSearch(context);
         addEventListeners(context);
+        fetchTemplateEndedEvent();
     } catch (e) {
         console.error(e)
     }
@@ -420,6 +428,7 @@ export function addEventListeners(context) {
             if (query.length < context.minQueryLength) {
                 return;
             }
+            updateUrlParameter(context.urlParams["q"], query);
             fetchAutoCompleteData(context, query).then();
             if (query.length >= context.minQueryLength && e.key !== "Enter") {
                 initPagination(context);
@@ -580,6 +589,8 @@ export function voiceSearch(context) {
         context["inputElement"].value = query;
         context.completedSearch = 1;
         initPagination(context);
+        updateUrlParameter(context.urlParams["q"], query);
+        context["inputElement"].focus();
         fetchData(context, query).then(() => {
             updatePopupResults(context);
             updateMeasurerPosition(context, query);

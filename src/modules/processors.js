@@ -20,8 +20,10 @@ import {
     fetchSettings
 } from './fetchers';
 import {
+    closePopupEvent,
     gridLoadedEvent
 } from './events'
+import {forEach} from "lodash";
 
 /**
  * Processes a single element by replacing its placeholder with an actual element.
@@ -60,7 +62,7 @@ export function processElements(context) {
  * Processes the template and replaces placeholders with actual elements.
  * @param {object} context - The SearchCore instance.
  * @param {string} template - The HTML template.
- * @param {string} inputReplacementString - The replacement string pattern.
+ * @param {RegExp} inputReplacementString - The replacement string pattern.
  * @param {string} [elementType="div"] - The type of HTML element to create.
  * @returns {Object} - The processed template and element IDs.
  */
@@ -131,12 +133,7 @@ export function updatePopupResults(context) {
             const element = document.createElement("div");
             element.className = "suggested-item";
             element.addEventListener("click", () => {
-                const query = context["inputElement"].value;
-                context.clearData(false);
-                initPagination(context);
-                context.fetchData(query, true).then(() => {
-                    context.updateGridPage();
-                });
+                window.location.href = item.url;
             });
 
             const leftColumn = document.createElement("div");
@@ -242,6 +239,13 @@ export function generateGrid(context) {
             value: context.selectedPopupCategory
         }
     ];
+    context.availableFilters.map((key, value) => {
+        selectedFilters.push({
+            type: key,
+            value: value,
+            label: value
+        })
+    });
     selectedFilters.forEach((filter) => {
         if (filter.value) {
             const filterContainer = document.createElement("div");
@@ -259,7 +263,7 @@ export function generateGrid(context) {
             clearFilter.addEventListener("click", () => {
                 removeUrlParameter(filter.type);
                 initPagination(context);
-                redirectToSearchPage();
+                redirectToSearchPage(context);
             });
             filterContainer.appendChild(clearFilter);
             selectedFiltersContainer.appendChild(filterContainer);
@@ -408,14 +412,14 @@ export function generateGrid(context) {
     sorting.id = "cb_sorting_select";
     sorting.addEventListener("change", (el) => {
         initPagination(context);
-        redirectToSearchPage('sort', el.target.value)
+        redirectToSearchPage(context, 'sort', el.target.value)
     });
     const currentSort = (new URL(window.location)).searchParams.get('sort');
-    Object.entries(context.sortByList).forEach(([key, value]) => {
+    Object.entries(context.sortByList).forEach(([key, sort]) => {
         const option = document.createElement("option");
-        option.innerHTML = value.toString();
-        option.value = key;
-        option.selected = key === currentSort;
+        option.innerHTML = sort.value.toString();
+        option.value = sort.key;
+        option.selected = sort.key === currentSort;
         sorting.appendChild(option);
     });
     sortingContainer.appendChild(sorting);
@@ -423,7 +427,7 @@ export function generateGrid(context) {
     order.id = "cb_order_select";
     order.addEventListener("change", (el) => {
         initPagination(context);
-        redirectToSearchPage('order', el.target.value)
+        redirectToSearchPage(context, 'order', el.target.value)
     });
     const currentOrder = (new URL(window.location)).searchParams.get('order');
     Object.entries(context.sortOrderList).forEach(([key, value]) => {
@@ -454,7 +458,8 @@ export function generateGrid(context) {
  */
 export function generateShopifyGrid(context) {
     context["gridContainerElement"].innerHTML = "";
-    const productsGrid = renderProductGrid(context.data.results, context);
+    const data = context.data ? context.data["results"] : [];
+    const productsGrid = renderProductGrid(context, data);
     context["gridContainerElement"].appendChild(productsGrid);
 }
 
@@ -493,24 +498,8 @@ function renderProductFilters(filters, context) {
                   </div>
                 </details>
               </collapsible-row>
-              <!-- Categories Filter -->
-              <collapsible-row data-index="2">
-                <details class="thb-filter js-filter" data-index="3" open="">
-                  <summary class="thb-filter-title"><span></span>${context.t["categories"]}</summary>
-                  <div class="thb-filter-content collapsible__content">
-                    <div id="categories-filter-placeholder"></div>
-                  </div>
-                </details>
-              </collapsible-row>
-              <!-- Brand Filter -->
-              <collapsible-row data-index="3">
-                <details class="thb-filter js-filter" data-index="4" open="">
-                  <summary class="thb-filter-title"><span></span>${context.t["brand"]}</summary>
-                  <div class="thb-filter-content collapsible__content">
-                    <div id="brand-filter-placeholder"></div>
-                  </div>
-                </details>
-              </collapsible-row>
+              <!-- Rest of the Filter -->
+               <div id="filters-placeholder"></div>
             </div>
           </facet-filters-form>
         </div>
@@ -522,19 +511,68 @@ function renderProductFilters(filters, context) {
     const priceFilterPlaceholder = filterContainer.querySelector("#price-filter-placeholder");
     priceFilterPlaceholder.replaceWith(priceFilterElement);
 
-    const categoriesFilters = filters.find(f => f.filter_name === "categories");
-    const tree = categoriesFilters.tree && categoriesFilters.tree[0] ? categoriesFilters.tree[0] : [];
-    const categoriesFilterElement =  createCollapsibleCheckboxFilter(context, tree, categoriesFilters);
-    const categoriesFilterPlaceholder = filterContainer.querySelector("#categories-filter-placeholder");
-    categoriesFilterPlaceholder.replaceWith(categoriesFilterElement);
-
-    const brandFilters = filters.find(f => f.filter_name === "brand");
-    const treeBrand = brandFilters.tree && brandFilters.tree[0] ? brandFilters.tree[0] : [];
-    const brandFilterElement =  createCollapsibleCheckboxFilter(context, treeBrand, brandFilters);
-    const brandFilterPlaceholder = filterContainer.querySelector("#brand-filter-placeholder");
-    brandFilterPlaceholder.replaceWith(brandFilterElement);
+    const filtersContainer = createDynamicFilters(context, filters)
+    const filtersPlaceholder = filterContainer.querySelector("#filters-placeholder");
+    filtersPlaceholder.replaceWith(filtersContainer);
 
     return filterContainer;
+}
+
+function createDynamicFilters(context, filters) {
+    // Create a container for all filters
+    const filtersContainer = document.createElement('div');
+    filtersContainer.id = 'filters-container';
+
+    // Iterate through the filters array to create dynamic collapsible rows
+    filters.forEach((filter, index) => {
+        if (!filter.tree || !filter.tree[0]) {
+            return;
+        }
+        const tree = filter.tree[0];
+
+        // Create the collapsible row
+        const collapsibleRow = document.createElement('collapsible-row');
+        collapsibleRow.setAttribute('data-index', index);
+
+        // Create the details element for the collapsible filter
+        const detailsElement = document.createElement('details');
+        detailsElement.classList.add('thb-filter', 'js-filter');
+        detailsElement.setAttribute('data-index', index);
+        detailsElement.setAttribute('open', '');
+
+        // Create the summary (title) for the collapsible filter
+        const summaryElement = document.createElement('summary');
+        summaryElement.classList.add('thb-filter-title');
+        summaryElement.innerHTML = `<span></span>${context.t[filter.filter_name] || filter.filter_name}`;
+
+        // Create the content area inside the collapsible filter
+        const contentDiv = document.createElement('div');
+        contentDiv.classList.add('thb-filter-content', 'collapsible__content');
+
+        // Create a placeholder for the filter content
+        const placeholderDiv = document.createElement('div');
+        placeholderDiv.id = `${filter.filter_name}-filter-placeholder`;
+
+        // Append the placeholder to the content area
+        contentDiv.appendChild(placeholderDiv);
+
+        // Append the summary and content to the details element
+        detailsElement.appendChild(summaryElement);
+        detailsElement.appendChild(contentDiv);
+
+        // Append the details element to the collapsible row
+        collapsibleRow.appendChild(detailsElement);
+
+        // Generate filter content dynamically and replace the placeholder
+        const filterElement = createCollapsibleCheckboxFilter(context, tree, filter);
+        placeholderDiv.replaceWith(filterElement);
+
+        // Append the collapsible row to the filters container
+        filtersContainer.appendChild(collapsibleRow);
+    });
+
+    // Return the completed filters container
+    return filtersContainer;
 }
 
 
@@ -561,17 +599,17 @@ export function createSortAndCount(context) {
     sortSelect.style.width = "94px";
 
     const currentSort = new URL(window.location).searchParams.get("sort");
-    Object.entries(context.sortByList).forEach(([key, value]) => {
+    Object.entries(context.sortByList).forEach(([key, sort]) => {
         const option = document.createElement("option");
-        option.value = key;
-        option.textContent = value;
-        option.selected = key === currentSort;
+        option.value = sort.key;
+        option.textContent = sort.value;
+        option.selected = sort.key === currentSort;
         sortSelect.appendChild(option);
     });
 
     sortSelect.addEventListener("change", (event) => {
         initPagination(context);
-        redirectToSearchPage("sort", event.target.value);
+        redirectToSearchPage(context, "sort", event.target.value);
     });
 
     const selectArrow = document.createElement("div");
@@ -665,27 +703,28 @@ export function createCollapsibleCheckboxFilter(context, tree, filter) {
             if ((filterInUrl && item.name === filterInUrl) || (popupCategoryInUrl && item.name === popupCategoryInUrl)) {
                 checkbox.checked = true;
             }
-
             checkbox.addEventListener("click", (event) => {
                 event.stopPropagation();
                 if (checkbox.checked) {
+                    console.log(filter.filter_name === context.urlParams["categories"])
                     if (filter.filter_name === context.urlParams["categories"]) {
                         if (rootCategory) {
                             context.selectedPopupCategory = "";
                             removeUrlParameter(context.urlParams["scoped"]);
                             removeUrlParameter(context.urlParams["popupCategory"]);
                             initPagination(context);
-                            redirectToSearchPage(filter.filter_name, item.name);
+                            redirectToSearchPage(context, filter.filter_name, item.name);
                         } else {
                             context.selectedCategory = "";
                             context.selectedPopupCategory = item.name;
                             removeUrlParameter(context.urlParams["categories"]);
                             initPagination(context);
-                            redirectToSearchPage(context.urlParams["popupCategory"], item.name);
+                            redirectToSearchPage(context, context.urlParams["popupCategory"], item.name);
                         }
                     } else {
+                        console.log(filter.filter_name, item.name);
                         initPagination(context);
-                        redirectToSearchPage(filter.filter_name, item.name);
+                        redirectToSearchPage(context, filter.filter_name, item.name);
                     }
                 } else {
                     if (filter.filter_name === context.urlParams["categories"] && !rootCategory) {
@@ -694,7 +733,7 @@ export function createCollapsibleCheckboxFilter(context, tree, filter) {
                         removeUrlParameter(filter.filter_name);
                     }
                     initPagination(context);
-                    redirectToSearchPage();
+                    redirectToSearchPage(context);
                 }
             });
 
@@ -730,20 +769,27 @@ export function createCollapsibleCheckboxFilter(context, tree, filter) {
     return placeholder;
 }
 
-
-function renderBrandFilter(brandData) {
-    if (!brandData.tree || brandData.tree.length === 0 || !brandData.tree[0].children) {
-        return "";
+/**
+ *  Function to extract the product slug from the URL
+ * @param {string} url - The URL to extract the slug from
+ * @returns {string|null} - The product slug or null if not found
+*/
+function getProductSlug(url) {
+    try {
+        const parsedUrl = new URL(url);
+        const parts = parsedUrl.pathname.split('/');
+        const productIndex = parts.indexOf('products');
+        if (productIndex !== -1 && parts[productIndex + 1]) {
+            return parts[productIndex + 1];
+        }
+        return null; // Return null if the slug is not found
+    } catch (error) {
+        console.error('Invalid URL:', error);
+        return null;
     }
-    return brandData.tree[0].children.map(brand => `
-    <div>
-      <input type="checkbox" name="filter.v.brand" value="${brand.name}" id="Filter-Mobile-brand-${brand.name}">
-      <label for="Filter-Mobile-brand-${brand.name}">${brand.name}</label>
-    </div>
-  `).join('');
 }
 
-function renderProductGrid(data, context) {
+function renderProductGrid(context, data) {
     const container = document.createElement("div");
     container.id = "shopify-section-template main-search";
     container.className = "shopify-section";
@@ -814,48 +860,56 @@ function renderProductGrid(data, context) {
     } else {
         conditionalContent.innerHTML = `
               <ul id="product-grid" class="products collection row small-up-2 medium-up-4 pagination--paginated">
-                ${data.map(product => `
-                  <li class="column">
-                    <product-card class="product-card text-left">
-                      <figure class="product-featured-image thb-hover">
-                        <a href="${product.url}" title="${product.name}" class="product-featured-image-link aspect-ratio aspect-ratio--adapt" style="--padding-bottom: 125.0%;">
-                          <img class="product-secondary-image lazyautosizes ls-is-cached lazyloaded" width="1584" height="1980" src="${product.image}" alt="${product.name}" style="object-position: 50.0% 50.0%;" sizes="220px">
-                          <img class="product-primary-image lazyautosizes ls-is-cached lazyloaded" width="1584" height="1980" src="${product.image}" alt="${product.name}" style="object-position: 50.0% 50.0%;" sizes="220px">
-                        </a>
-                        <quick-view class="product-card-quickview product-card-quickview--button" href="#Product-Drawer" data-product-handle="${product.sku}" tabindex="-1">
-                          <div class="loading-overlay">
-                            <svg aria-hidden="true" focusable="false" role="presentation" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
-                              <circle class="spinner-path-qv" fill="none" stroke-width="6" cx="33" cy="33" r="30" stroke="black"></circle>
-                            </svg>
+                ${data.map(product => {
+                    const slug = getProductSlug(product.url);
+                    let li = `
+                      <li class="column">
+                        <product-card class="product-card text-left">
+                          <figure class="product-featured-image thb-hover">
+                            <a href="${product.url}" title="${product.name}" class="product-featured-image-link aspect-ratio aspect-ratio--adapt" style="--padding-bottom: 125.0%;">
+                              <img class="product-secondary-image lazyautosizes ls-is-cached lazyloaded" width="1584" height="1980" src="${product.additional_image}" alt="${product.name}" style="object-position: 50.0% 50.0%;" sizes="220px">
+                              <img class="product-primary-image lazyautosizes ls-is-cached lazyloaded" width="1584" height="1980" src="${product.image}" alt="${product.name}" style="object-position: 50.0% 50.0%;" sizes="220px">
+                            </a>`;
+                    if (slug) {
+                        li += `
+                            <quick-view class="product-card-quickview product-card-quickview--button" href="#Product-Drawer" data-product-handle="${slug}" tabindex="-1">
+                              <div class="loading-overlay">
+                                <svg aria-hidden="true" focusable="false" role="presentation" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                                  <circle class="spinner-path-qv" fill="none" stroke-width="6" cx="33" cy="33" r="30" stroke="black"></circle>
+                                </svg>
+                              </div>
+                              <span style="padding-right: 5px;">
+                                <img src="https://cdn.shopify.com/s/files/1/0702/0206/5153/files/ns-search.svg?v=1718799016" alt="wishlist-icon" width="16px" height="16px">
+                              </span>
+                              <span>${context.t["quick_view"]}</span>
+                            </quick-view>`;
+                    }
+                    li += `
+                        </figure>
+                          <div class="product-card-info">
+                            <a href="${product.url}" title="${product.name}" class="product-card-title">${product.name}</a>
+                            <span class="price">
+                              <ins>
+                                <span class="product__price--regular">${product.price.toFixed(2)} €</span>
+                              </ins>
+                              <small class="unit-price hidden">
+                                <span></span>
+                                <span class="unit-price-separator">/</span>
+                                <span></span>
+                              </small>
+                            </span>
                           </div>
-                          <span style="padding-right: 5px;">
-                            <img src="https://cdn.shopify.com/s/files/1/0702/0206/5153/files/ns-search.svg?v=1718799016" alt="wishlist-icon" width="16px" height="16px">
-                          </span>
-                          <span>${context.t["quick_view"]}</span>
-                        </quick-view>
-                      </figure>
-                      <div class="product-card-info">
-                        <a href="${product.url}" title="${product.name}" class="product-card-title">${product.name}</a>
-                        <span class="price">
-                          <ins>
-                            <span class="product__price--regular">${product.price.toFixed(2)} €</span>
-                          </ins>
-                          <small class="unit-price hidden">
-                            <span></span>
-                            <span class="unit-price-separator">/</span>
-                            <span></span>
-                          </small>
-                        </span>
-                      </div>
-                    </product-card>
-                  </li>
-                `).join('')}
+                        </product-card>
+                      </li>`;
+                    
+                    return li;
+        }).join('')}
               </ul>
               <div id="pagination-container"></div>
         `;
     }
-
-    const productFilterElement = renderProductFilters(context.data.filters, context);
+    const filters = context.data ? context.data.filters : [];
+    const productFilterElement = renderProductFilters(filters, context);
     const productFilterPlaceholder = container.querySelector("#filters-container");
     if (productFilterPlaceholder) productFilterPlaceholder.appendChild(productFilterElement);
 
@@ -904,7 +958,14 @@ export function createActiveFilters(context) {
             label: context.selectedPopupCategory
         }
     ];
-    console.log(selectedFilters)
+
+    forEach(context.availableFilters,(value, key) => {
+        selectedFilters.push({
+            type: key,
+            value: value,
+            label: value
+        })
+    });
 
     selectedFilters.forEach((filter) => {
         if (filter.value) {
@@ -927,12 +988,11 @@ export function createActiveFilters(context) {
             svgIcon.appendChild(path);
             clearIcon.appendChild(svgIcon);
 
-            // Event listener to remove filter on click
             filterLink.addEventListener("click", (event) => {
                 event.preventDefault();
                 removeUrlParameter(filter.type);
                 initPagination(context);
-                redirectToSearchPage();
+                redirectToSearchPage(context);
             });
 
             filterLink.appendChild(clearIcon);
@@ -940,22 +1000,26 @@ export function createActiveFilters(context) {
         }
     });
 
-    // Clear all filters link
     const clearAllLink = document.createElement("span");
-    // clearAllLink.href = `#`;
     clearAllLink.className = "active-facets__button-remove text-button";
-    clearAllLink.textContent = "Απαλοιφή όλων";
+    clearAllLink.textContent = context.t["clear_all"];
     clearAllLink.addEventListener("click", (event) => {
-        event.preventDefault();
-        [
+        const allFilters = [
             context.urlParams["categories"],
             context.urlParams["brand"],
             context.urlParams["maxPrice"],
             context.urlParams["minPrice"],
             context.urlParams["popupCategory"]
-        ].forEach(removeUrlParameter);
+        ];
+        forEach(context.availableFilters, (value, key) => {
+            if (value) {
+                allFilters.push(key);
+            }
+        })
+        event.preventDefault();
+        allFilters.forEach(removeUrlParameter);
         initPagination(context);
-        redirectToSearchPage();
+        redirectToSearchPage(context);
     });
 
     facetRemove.appendChild(clearAllLink);
@@ -977,17 +1041,17 @@ export function createFilterWithChildren(context, tree, filter, rootCategory = f
                     removeUrlParameter(context.urlParams["scoped"]);
                     removeUrlParameter(context.urlParams["popupCategory"]);
                     initPagination(context);
-                    redirectToSearchPage(filter.filter_name, tree.name);
+                    redirectToSearchPage(context, filter.filter_name, tree.name);
                 } else {
                     context.selectedCategory = "";
                     context.selectedPopupCategory = tree.name;
                     removeUrlParameter(context.urlParams["categories"]);
                     initPagination(context);
-                    redirectToSearchPage('popup-category', tree.name);
+                    redirectToSearchPage(context, 'popup-category', tree.name);
                 }
             } else {
                 initPagination(context);
-                redirectToSearchPage(filter.filter_name, tree.name);
+                redirectToSearchPage(context, filter.filter_name, tree.name);
             }
 
         });
@@ -1020,6 +1084,7 @@ export function clearData(context, clearInput = true) {
     context.measurer.textContent = "";
     context.suggestedWord = "";
     context["suggestionElement"].innerHTML = "";
+    context["inputElement"].focus();
 }
 
 /**
@@ -1045,12 +1110,9 @@ export function typeaheadList(context) {
             element.className = "typeahead-item";
             element.innerHTML = item.replace("&", "", 1);
             element.addEventListener("click", () => {
-                context["inputElement"].value = item;
                 clearData(context, false);
                 initPagination(context);
-                fetchData(context, item, true).then(() => {
-                    updateGridPage(context);
-                });
+                redirectToSearchPage(context, context.urlParams["q"], item);
             });
             context["typeaheadContainerElement"].appendChild(element);
         });
@@ -1076,7 +1138,7 @@ export function relativeCategories(context) {
             element.addEventListener("click", () => {
                 removeUrlParameter(context.urlParams["categories"]);
                 initPagination(context);
-                redirectToSearchPage(context.urlParams["popupCategory"], item.name);
+                redirectToSearchPage(context, context.urlParams["popupCategory"], item.name);
             });
             list.appendChild(element);
         });
@@ -1107,7 +1169,7 @@ export function updateBrandContainer(context) {
             element.textContent = `${item.key} (${item.doc_count})`;
             element.addEventListener("click", () => {
                 initPagination(context);
-                redirectToSearchPage(context.urlParams["brand"], item.key);
+                redirectToSearchPage(context, context.urlParams["brand"], item.key);
             });
             list.appendChild(element);
         });
@@ -1147,7 +1209,7 @@ export function updateTitles(context) {
     };
 
     elementsWithTitles.forEach((element) => {
-        let text = element.getAttribute("datatitle");
+        let text = context.t[element.getAttribute("datatitle")] || element.getAttribute("datatitle");
         for (const [key, value] of Object.entries(replace)) {
             text = text.replace(new RegExp(key, "g"), value);
         }
@@ -1181,7 +1243,7 @@ export function recentSearches(context) {
             element.textContent = `${item.search_term}`;
             element.addEventListener("click", () => {
                 initPagination(context);
-                redirectToSearchPage(context.urlParams["q"], item.search_term);
+                redirectToSearchPage(context, context.urlParams["q"], item.search_term);
             });
             list.appendChild(element);
         });

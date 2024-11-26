@@ -1,3 +1,9 @@
+export function searchLoadedEvent(data = null) {
+    const searchLoadedEvent = new CustomEvent("cbSearchLoaded", {
+        detail: data
+    });
+    document.dispatchEvent(searchLoadedEvent);
+}
 export function gridLoadedEvent(data = null) {
     const gridLoadedEvent = new CustomEvent("cbGridLoaded", {
         detail: data
@@ -33,4 +39,10 @@ export function fetchMaxPriceEndedEvent(data = null) {
         detail: data
     });
     document.dispatchEvent(fetchMaxPriceEndedEvent);
+}
+export function closePopupEvent(data = null) {
+    const closePopupEvent = new CustomEvent("cbClosePopup", {
+        detail: data
+    });
+    document.dispatchEvent(closePopupEvent);
 }

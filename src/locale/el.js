@@ -22,5 +22,18 @@ export default {
     "no_results_for": "Δεν βρέθηκαν αποτελέσματα για",
     "quick_view": "Γρήγορη προβολή",
     "min_price": "Ελαχιστη τιμή",
-    "max_price": "Μέγιστη τιμή"
+    "max_price": "Μέγιστη τιμή",
+    "search_products": "Αναζητήστε προϊόντα...",
+    "we_suggest_the_following_with_current_product_count_and_total_count": "Σας προτείνουμε τα παρακάτω ( {currentProductCount} από {totalProductCount} )",
+    "show_all_results_with_total_count": "ΕΜΦΑΝΙΣΗ ΟΛΩΝ ΤΩΝ ΑΠΟΤΕΛΕΣΜΑΤΩΝ ( {totalProductCount} )",
+    "recent_searches": "Αναζήτησες πρόσφατα",
+    "sunthesi": "Συνθέση",
+    "schedio": "Σχέδίο",
+    "mpatzaki": "Μπατζάκι",
+    "mikos": "Μήκος",
+    "maniki": "Μανίκι",
+    "laimokopsi_ntekolte": "Λαιμόκοψη - Ντεκολτέ",
+    "koumpoma": "Κούμπωμα",
+    "grammi": "Γραμμή",
+    "clear_all": "Απαλοιφή όλων"
 };

@@ -1,6 +1,6 @@
 import { fetchData } from "./fetchers";
 import { updateGridPage } from "./processors";
-import { updateUrlParameter, formatPrice } from "./utils";
+import {updateUrlParameter, formatPrice, redirectToSearchPage} from "./utils";
 import {forEach} from "lodash";
 
 /**
@@ -335,11 +335,9 @@ export function addPriceFilter(context) {
     const updatePrices = () => {
         context.priceMinValue = +minPriceInput.value;
         context.priceMaxValue = +maxPriceInput.value;
-        fetchData(context, context["inputElement"].value, true).then(() => {
-            updateUrlParameter(context.urlParams["minPrice"], context.priceMinValue.toString());
-            updateUrlParameter(context.urlParams["maxPrice"], context.priceMaxValue.toString());
-            updateGridPage(context);
-        });
+        updateUrlParameter(context.urlParams["minPrice"], context.priceMinValue.toString());
+        updateUrlParameter(context.urlParams["maxPrice"], context.priceMaxValue.toString());
+        redirectToSearchPage(context);
     };
 
     minPriceInput.addEventListener("input", () => {
@@ -356,8 +354,8 @@ export function addPriceFilter(context) {
         updateLabels();
     });
 
-    minPriceInput.addEventListener("mouseup", updatePrices);
-    maxPriceInput.addEventListener("mouseup", updatePrices);
+    minPriceInput.addEventListener("change", updatePrices);
+    maxPriceInput.addEventListener("change", updatePrices);
 
     inputsContainer.appendChild(minPriceInput);
     inputsContainer.appendChild(maxPriceInput);

@@ -1,5 +1,6 @@
 import el from '../locale/el.js';
 import en from '../locale/en.js';
+import {forEach} from "lodash";
 
 const translations = {
     el,
@@ -56,7 +57,7 @@ export function extractAttributes(context, template, pattern) {
 
     while ((match = pattern.exec(template)) !== null) {
         if (match[2] !== undefined && match[2] !== "") {
-            const parsedContent = parseContentToObject(match[2]);
+            const parsedContent = parseContentToObject(context, match[2]);
             if (parsedContent) {
                 results.push({matchedString: match[0], attributes: parsedContent});
             } else {
@@ -66,7 +67,6 @@ export function extractAttributes(context, template, pattern) {
             results.push({matchedString: match[0], attributes: false});
         }
     }
-
     return results;
 }
 
@@ -129,21 +129,16 @@ export function isGridVisible(context) {
     return context["gridContainerElement"] && context["gridContainerElement"].innerHTML !== "";
 }
 
-// TODO: This should be temporary until brand is correctly implemented in filters
-export function addCustomToFilters(context) {
-    context.data.filters.push({
-        filter_name: context.urlParams["brand"],
-        tree: [
-            {
-                children: context.data.rel_brands.map(brand => {
-                    return {
-                        name: brand.key,
-                        doc_count: brand.doc_count
-                    }
-                })
-            }
-        ]
+export function createAvailableFilters(context, filters) {
+    const urlParams = new URLSearchParams(window.location.search);
+    filters.map(filter => {
+        if (filter.tree && filter.tree[0]) {
+            context.availableFilters[filter.filter_name] = urlParams.get(filter.filter_name) || "";
+        }
     });
+}
+
+export function addCustomToFilters(context) {
     context.data.filters.push({
         filter_name: "price",
         tree: []
@@ -152,13 +147,20 @@ export function addCustomToFilters(context) {
 
 /**
  * Parses a content string to an object.
+ * @param {object} context - The SearchCore instance.
  * @param {string} content - The content string.
  * @returns {Object|null} - The parsed object or null if parsing failed.
  */
-export function parseContentToObject(content) {
+export function parseContentToObject(context, content) {
     try {
         const jsonLikeString = `{${content.replace(/(\w+)\s*:\s*/g, '"$1":')}}`;
-        return JSON.parse(jsonLikeString);
+        const json = JSON.parse(jsonLikeString);
+        forEach(json, (value, key) => {
+            if (key && key === "placeholder") {
+                json["placeholder"] = context.t[value] || value;
+            }
+        })
+        return json;
     } catch (error) {
         console.error("Failed to parse content to object:", error, content);
         return null;
@@ -189,10 +191,9 @@ export function updateUrlParameter(param, value) {
 
 /**
  * Removes the specified URL parameter.
- * @param {string} param - The URL parameter to remove.
+ * @param {number | string} param - The URL parameter to remove.
  */
 export function removeUrlParameter(param) {
-    console.log(param)
     const url = new URL(window.location);
     url.searchParams.delete(param);
     window.history.pushState({path: url.href}, "", url.href);
@@ -200,15 +201,21 @@ export function removeUrlParameter(param) {
 
 /**
  * Redirects to the search page with the given parameter and value.
+ * @param {object} context - The SearchCore instance.
  * @param {string} param - The URL parameter.
  * @param {string} value - The value to set.
  */
-export function redirectToSearchPage(param = '', value= '') {
-    const url = new URL(window.location);
+export function redirectToSearchPage(context, param = '', value = '') {
+    let url = new URL(window.location);
+    if (context["searchPageRedirect"]) {
+        const baseRedirectUrl = new URL(context["searchPageRedirect"], window.location.origin);
+        baseRedirectUrl.search = url.search;
+        url = baseRedirectUrl;
+    }
     if (param && value) {
         url.searchParams.set(param, value);
     }
-    window.location = url.href;
+    window.location.href = url.href;
 }
 
 /**
@@ -235,6 +242,9 @@ export function clearSelectedFilters(context) {
     removeUrlParameter(context.urlParams["categories"]);
     removeUrlParameter(context.urlParams["popupCategory"]);
     removeUrlParameter(context.urlParams["brand"]);
+    forEach(context.availableFilters, (value, key) => {
+        removeUrlParameter(key);
+    })
     context.selectedCategory = "";
     context.selectedPopupCategory = "";
     context.selectedBrand = "";
@@ -311,18 +321,49 @@ export function sliceAutocompleteTermsInLevels(context) {
 export function selectedSortingBy(context) {
     const el = document.getElementById("cb_sorting_select");
     const currentSort = (new URL(window.location)).searchParams.get('sort');
+
+    let sortKey = '';
+
     if (currentSort) {
-        return currentSort;
+        sortKey = currentSort;
     } else if (el) {
-        return el.value;
+        sortKey = el.value;
     } else {
-        return Object.keys(context.sortByList)[0];
+        sortKey = context.sortByList[0].key
     }
+
+    const sortObj = context.sortByList.find(item => item.key === sortKey);
+
+    if (sortObj.format) {
+        sortKey = getSortingAttribute(sortObj.format, sortObj.key);
+    }
+
+    return sortKey
 }
 
 export function selectedSortingOrder(context) {
     const el = document.getElementById("cb_order_select");
     const currentOrder = (new URL(window.location)).searchParams.get('order');
+
+    const sortEl = document.getElementById("cb_sorting_select");
+    const currentSort = (new URL(window.location)).searchParams.get('sort');
+
+    let sortKey = '';
+
+    if (currentSort) {
+        sortKey = currentSort;
+    } else if (sortEl) {
+        sortKey = el.value;
+    } else {
+        sortKey = context.sortByList[0].key
+    }
+
+    const sortObj = context.sortByList.find(item => item.key === sortKey);
+
+    if (sortObj.format) {
+        return getSortingOrder(sortObj.format, sortObj.key);
+    }
+
     if (currentOrder) {
         return currentOrder;
     } else if (el) {
@@ -330,6 +371,32 @@ export function selectedSortingOrder(context) {
     } else {
         return Object.keys(context.sortOrderList)[0];
     }
+}
+
+function parseKeyFromFormat(format, key) {
+    const regex = new RegExp(
+        format
+            .replace("{attribute}", "(?<attribute>.+)")
+            .replace("{order}", "(?<order>.+)")
+    );
+
+    const match = key.match(regex);
+    if (!match) {
+        return key;
+    }
+
+    const { attribute, order } = match.groups;
+    return { attribute, order };
+}
+
+function getSortingAttribute(format, key) {
+    const { attribute } = parseKeyFromFormat(format, key);
+    return attribute;
+}
+
+function getSortingOrder(format, key) {
+    const { order } = parseKeyFromFormat(format, key);
+    return order;
 }
 
 export function initPagination(context) {
