@@ -239,13 +239,17 @@ export function generateGrid(context) {
             value: context.selectedPopupCategory
         }
     ];
-    context.availableFilters.map((key, value) => {
-        selectedFilters.push({
-            type: key,
-            value: value,
-            label: value
-        })
-    });
+
+    forEach(context.availableFilters, (value, key) => {
+        if (value) {
+            selectedFilters.push({
+                type: key,
+                value: value,
+                label: value
+            })
+        }
+    })
+
     selectedFilters.forEach((filter) => {
         if (filter.value) {
             const filterContainer = document.createElement("div");
