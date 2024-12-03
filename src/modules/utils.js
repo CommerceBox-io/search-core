@@ -284,10 +284,10 @@ export function usefulAutocompleteTerms(context, list, query) {
  */
 export function loadLocaleTranslations(context, locale) {
     context.t = translations[locale] || translations[context.defaultLocale];
-    if (context.translations && Object.keys(context.translations).length > 0) {
+    if (context.translations && context.translations[locale] && Object.keys(context.translations).length > 0) {
         context.t = {
             ...context.t,
-            ...context.translations
+            ...context.translations[locale]
         }
     }
 }
