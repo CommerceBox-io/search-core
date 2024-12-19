@@ -1,4 +1,5 @@
 const path = require('path');
+const p = require('./package.json');
 
 module.exports = {
     entry: './src/index.js',
@@ -9,7 +10,7 @@ module.exports = {
             export: "default",
         },
         filename: 'bundle.js',
-        path: path.resolve(__dirname, 'output'),
+        path: path.resolve(__dirname, 'output/' + p.version),
     },
     module: {
         rules: [

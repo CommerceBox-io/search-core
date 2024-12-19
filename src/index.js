@@ -62,6 +62,8 @@ class SearchCore {
         this.locale = locale ? locale : this.defaultLocale;
         this.sorting = sorting;
         this.translations = translations;
+        this.searchVersion = 2;
+        this.autocompleteVersion = 2;
 
         getSettings(this).finally(() => {
             loadLocaleTranslations(this, this.locale);

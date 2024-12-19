@@ -1186,9 +1186,8 @@ export function updateBrandContainer(context) {
  * @param {object} context - The SearchCore instance.
  */
 export function updateBannerContainer(context) {
-    const ad = context.data.ads;
-    if (!ad || !Object.keys(ad).length) return;
-    const banner = JSON.parse(ad);
+    const banner = context.data.ads;
+    if (!banner || !Object.keys(banner).length) return;
     if (context["bannerContainerElement"] && banner["image"]) {
         context["bannerContainerElement"].innerHTML = "";
         const a = document.createElement("a");

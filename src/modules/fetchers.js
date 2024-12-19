@@ -64,7 +64,8 @@ export function fetchAutoCompleteData(context, query) {
         debug_query_elastic: 0,
         debug_query_elastic_show: 0,
         user: context.userParam,
-        locale: context.locale
+        locale: context.locale,
+        version: context.autocompleteVersion
     }
     return fetch(context.autoCompleteUrl, {
         method: "POST",
@@ -127,7 +128,8 @@ export function fetchData(context, query, isGrid = false) {
         sort_attribute: selectedSortingBy(context),
         sort_order: selectedSortingOrder(context),
         user: context.userParam,
-        locale: context.locale
+        locale: context.locale,
+        version: context.searchVersion
     };
 
     forEach(context.availableFilters, (value, key) => {
@@ -236,7 +238,8 @@ export function fetchMaxPrice(context, query, isGrid = false) {
         sort_attribute: selectedSortingBy(context),
         sort_order: selectedSortingOrder(context),
         user: context.userParam,
-        locale: context.locale
+        locale: context.locale,
+        version: context.searchVersion
     };
 
     return fetch(context.apiEndpoint, {
