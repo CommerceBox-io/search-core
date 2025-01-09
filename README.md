@@ -65,22 +65,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const netApiSearch = process.env.API_URL;
     const platform = process.env.PLATFORM;
     const locale = "en";
+    
 
-    // Generate a UUID or retrieve an existing one
-    function generateUUID() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            let r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-
-    const uuid = localStorage.getItem('cbscuuid') || generateUUID();
+    const uuid = "guest"; // Or user id
 
     const options = {
         apiEndpoint: netApiSearch,
         containerSelector: '#search-plugin-container',
         layoutTemplate: 'https://cube.commercebox.io/search/templates/template.html',
-        uuid: uuid, // Can be dynamic or fetched from a session
+        uuid: uuid,
         user: 'unique_user_identifier',
         locale: locale,
         platform: platform,

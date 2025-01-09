@@ -7,7 +7,8 @@ import {
     redirectToExternalSearchPage,
     removeUrlParameter,
     updateUrlParameter,
-    initPagination
+    initPagination,
+    getUUID
 } from './utils';
 import {fetchAutoCompleteData, fetchData, fetchTemplate,} from './fetchers';
 import {
@@ -131,9 +132,9 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
  */
 export function initializeUser(context, uuid) {
     context.uuid = localStorage.getItem('cbscuuid');
-    if (!context.uuid || context.uuid !== uuid) {
-        context.uuid = uuid;
-        localStorage.setItem('cbscuuid', uuid);
+    if (!context.uuid || (uuid !== "guest" && context.uuid !== uuid) || (uuid === "guest" && !context.uuid.startsWith("guest-"))) {
+        context.uuid = getUUID(uuid);
+        localStorage.setItem('cbscuuid', context.uuid);
     }
 }
 
