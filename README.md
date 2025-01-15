@@ -11,6 +11,9 @@ Install this project:
 npm install git+https://github.com/CommerceBox-io/search-core.git
 or
 yarn add search-core@git:CommerceBox-io/search-core
+
+or add it as a script
+<script src="https://cdn.commercebox.io/search-core/1.1.8/bundle.js" />
 ```
 
 ## Usage
@@ -72,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const options = {
         apiEndpoint: netApiSearch,
         containerSelector: '#search-plugin-container',
-        layoutTemplate: 'https://cube.commercebox.io/search/templates/template.html',
+        layoutTemplate: '"https://cdn.commercebox.io/search/templates/template.html',
         uuid: uuid,
         user: 'unique_user_identifier',
         locale: locale,
@@ -132,7 +135,7 @@ e.g. `{{containerElement[class:"suggested-items-list", datatitle:"Σας προ�
 | `{{scopedSearchDropdown}}`   | `scopedSearchDropdown`      | `select`   | Replaced with a dropdown for selecting a category to filter the results. |
 
 
-A complete layout example can be found in the `https://cube.commercebox.io/search/templates/template.html` file.
+A complete layout example can be found in the `"https://cdn.commercebox.io/search/templates/template.html` file.
 
 
 ### Additional instructions

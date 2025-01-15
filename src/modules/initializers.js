@@ -85,7 +85,7 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     context.scannerContainerID = "scanner-container";
     context.debugQueryContainerID = "debug-query-container";
     context.paginationType = "numeric";
-    context.defautlTemplate = "https://cube.commercebox.io/search/templates/template.html";
+    context.defautlTemplate = "https://cdn.commercebox.io/search/templates/template.html";
 
     context.placeholders = [];
     context.autocompleteTermsList = [];
