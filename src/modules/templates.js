@@ -41,19 +41,46 @@ export function generateTemplate() {
                        <span class="clear-filter" >x</span>
                     </div>
                  </div>
-                 <div @loop="filter in filters" class="filter {{filter.filter_name}}">
-                    <div class="title">{{filter.name}}</div>
-                    <div class="items">
-                       <div class="children-container" @loop="child in filter.children">
-                          <div class="filter-item root-category">{{child.name}} ({{child.doc_count}})</div>
-                            <div class="children-container" @loop="subchild in child.children">
-                                <div class="filter-item">{{subchild.name}} ({{subchild.doc_count}})</div>
-                                <div class="children-container" @loop="subsubchild in subchild.children">
-                                   <div class="filter-item">{{subsubchild.name}} ({{subsubchild.doc_count}})</div>
-                                </div>
-                            </div>
-                       </div>
+                 <div @loop="filter in filters">
+                    <div @if="filter.name === 'price'" class="filter {{filter.name}}">
+                        <div class="title">{{filter.name}}</div>
+                        <div class="price-filter">
+                           <div class="price-highest">{{t.highest_price_is}} {{filter.max}}</div>
+                           <div class="inputs-container">
+                              <input type="range" min="{{filter.min}}" max="{{filter.max}}" step="{{filter.step}}" value="{{filter.minValue}}" class="range-min">
+                              <input type="range" min="{{filter.min}}" max="{{filter.max}}" step="{{filter.step}}" value="{{filter.maxValue}}" class="range-max">
+                           </div>
+                           <div class="price-label">
+                              <span id="min_price">{{filter.minValue}}</span>
+                              <span id="max_price">{{filter.maxValue}}</span>
+                           </div>
+                        </div>
                     </div>
+                    <div @else class="filter {{filter.filter_name}}">
+                        <div class="title">{{filter.name}}</div>
+                        <div class="items">
+                           <div class="children-container" @loop="child in filter.children">
+                              <div class="filter-item root-category">{{child.name}} ({{child.doc_count}})</div>
+                                <div class="children-container" @loop="subchild in child.children">
+                                    <div class="filter-item">{{subchild.name}} ({{subchild.doc_count}})</div>
+                                    <div class="children-container" @loop="subsubchild in subchild.children">
+                                       <div class="filter-item">{{subsubchild.name}} ({{subsubchild.doc_count}})</div>
+                                    </div>
+                                </div>
+                           </div>
+                        </div>
+                     </div>
+                 </div>
+              </div>
+              <div class="grid-items">
+                 <div class="grid-item" @loop="item in data.results">
+                    <a class="link" target="_blank" href="{{item.url}}">
+                       <img class="image" src="{{item.image}}" alt="{{item.name}}">
+                       <div class="name">{{item.name}}</div>
+                    </a>
+                    <div class="sku">SKU: {{item.sku}}</div>
+                    <div class="description" @if="item.desc">{{item.desc}}</div>
+                    <b class="price">{{item.price}}</b>
                  </div>
               </div>
            </div>
@@ -71,28 +98,21 @@ export function renderGrid(context) {
 
     context.gridContainerElement.innerHTML = replaceTemplateVariables(generateTemplate(), context);
 
-    console.log(context)
-
     processLoops(context.gridContainerElement, context);
     processConditionalBlocks(context.gridContainerElement, context);
-    attachListeners(context.gridContainerElement, context);
 }
 
 function createFilter(context) {
     const filters = [];
     context.data.filters.forEach((filter) => {
         if (filter.filter_name === "price") {
-            const query = context["inputElement"].value.trim();
-            fetchMaxPrice(context, query, true).then(() => {
-                const price = addPriceFilter(context);
-                filters.push({
-                    name: filter.filter_name,
-                    min: context.minPrice,
-                    max: context.maxPrice,
-                    minValue: context.priceMinValue,
-                    maxValue: context.priceMaxValue,
-                    step: 1,
-                })
+            filters.push({
+                name: filter.filter_name,
+                min: context.minPrice,
+                max: context.maxPrice,
+                minValue: context.priceMinValue,
+                maxValue: context.priceMaxValue,
+                step: 1,
             })
         } else {
             const tree = filter.tree && filter.tree[0] ? filter.tree[0] : [];
@@ -102,7 +122,6 @@ function createFilter(context) {
             });
         }
     });
-    console.log(filters)
     return filters;
 }
 
@@ -188,7 +207,7 @@ function selectedFilters(context) {
 function evaluateExpression(expression, context) {
     try {
         const safeCtx = createSafeContext(context);
-        const rewritten = rewriteExpression(expression);
+        let rewritten = rewriteExpression(expression);
 
         const fn = new Function('ctx', `
             try {
@@ -197,7 +216,6 @@ function evaluateExpression(expression, context) {
                 return false;
             }
         `);
-
         return fn(safeCtx);
     } catch (err) {
         console.warn("Error evaluating expression:", expression, err);
@@ -235,18 +253,34 @@ function createSafeContext(original) {
  * (because that means they're a property, e.g. "selectedFilter.value").
  */
 function rewriteExpression(expr) {
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+
     return expr.replace(
         /\b([a-zA-Z_$][0-9a-zA-Z_$]*)\b/g,
         (match, p1, offset, fullString) => {
-            // Skip JS keywords that we shouldn't rewrite
-            if (["null", "true", "false", "undefined"].includes(p1)) {
-                return p1;
+            // Track whether we are inside quotes
+            for (let i = 0; i < offset; i++) {
+                if (fullString[i] === "'" && !inDoubleQuote) {
+                    inSingleQuote = !inSingleQuote;
+                } else if (fullString[i] === '"' && !inSingleQuote) {
+                    inDoubleQuote = !inDoubleQuote;
+                }
             }
-            // If preceded by '.', it's already an object property (e.g. obj.foo)
+            // If inside quotes, don't rewrite
+            if (inSingleQuote || inDoubleQuote) {
+                return match;
+            }
+            // Skip JS keywords that we shouldn't rewrite
+            if (["null", "true", "false", "undefined"].includes(match)) {
+                return match;
+            }
+            // If preceded by '.', it's already an object property (e.g., obj.foo)
             if (offset > 0 && fullString[offset - 1] === '.') {
                 return match;
             }
-            return 'ctx.' + match;
+            // Rewrite as 'ctx.<identifier>'
+            return `ctx.${match}`;
         }
     );
 }
@@ -275,6 +309,7 @@ function processConditionalBlocks(container, context) {
         const ifElem = conditionalElems[i];
         // Only proceed if this element has an @if (start of a block group)
         const ifExpr = ifElem.getAttribute('@if');
+
         if (!ifExpr) {
             i++;
             continue;
@@ -401,7 +436,6 @@ function processLoops(container, data) {
         }
 
         if (dataRef == null) {
-            console.warn(`@loop: Could not find data for "${dataExpr}"`);
             return;
         }
 
@@ -533,22 +567,6 @@ function processLoops(container, data) {
 }
 
 /**
- * Generates the range of page numbers to display
- * @param {object} context - The SearchCore instance
- * @returns {Array} Array of page numbers
- */
-function generatePageRange(context) {
-    const totalPages = Math.ceil(context.totalProductCount / context.gridProductsPerPage);
-    const current = context.gridPage;
-    const range = [];
-
-    for (let i = Math.max(1, current - 2); i <= Math.min(totalPages, current + 2); i++) {
-        range.push(i);
-    }
-    return range;
-}
-
-/**
  * Replaces template variables with actual values
  * @param {string} template - The HTML template
  * @param {object} data - The data object containing values
@@ -562,139 +580,5 @@ function replaceTemplateVariables(template, data) {
             return data[obj]?.[prop] ??  `\{\{${trimmedKey}\}\}`;
         }
         return data[trimmedKey] ??  `\{\{${trimmedKey}\}\}`;
-    });
-}
-
-/**
- * Attaches event listeners for custom attributes
- * @param {HTMLElement} container - The root container
- * @param {object} context - The SearchCore instance
- */
-function attachListeners(container, context) {
-    // Handle filter changes
-    container.querySelectorAll('.facet-checkbox__input').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            const filterName = e.target.closest('details').querySelector('.thb-filter-title').textContent.trim();
-            const value = e.target.value;
-            updateFilter(context, filterName, value, e.target.checked);
-        });
-    });
-
-    // Handle sort changes
-    const sortSelect = container.querySelector('#SortByBar');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', (e) => {
-            updateUrlParameter('sort', e.target.value);
-            fetchData(context, context.inputElement.value.trim(), true).then(() => {
-                renderGrid(context);
-            });
-        });
-    }
-
-    // Handle price filter changes
-    const priceInputs = container.querySelectorAll('.price-filter input[type="range"]');
-    priceInputs.forEach(input => {
-        input.addEventListener('change', (e) => {
-            const isMin = e.target.classList.contains('range-min');
-            const value = parseInt(e.target.value);
-
-            if (isMin) {
-                context.priceMinValue = value;
-                updateUrlParameter('min-price', value.toString());
-            } else {
-                context.priceMaxValue = value;
-                updateUrlParameter('max-price', value.toString());
-            }
-
-            fetchData(context, context.inputElement.value.trim(), true).then(() => {
-                renderGrid(context);
-            });
-        });
-    });
-
-    // Handle pagination clicks
-    container.querySelectorAll('.page-numbers a').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const page = parseInt(new URL(e.target.href).searchParams.get('page'));
-            goToPage(context, page);
-        });
-    });
-
-    // Dynamic loops for @loop
-    container.querySelectorAll('[\\@loop]').forEach((el) => {
-        const loopExpression = el.getAttribute('@loop');
-        const [itemName, arrayName] = loopExpression.split(' in ');
-
-        // Navigate the data object path to get the array
-        const arrayPath = arrayName.trim().split('.');
-        let array = context;
-        for (const path of arrayPath) {
-            array = array[path.trim()];
-            if (!array) break;
-        }
-        array = array || [];
-
-        const parent = el.parentElement;
-
-        array.forEach((item, index) => {
-            const clone = el.cloneNode(true);
-            clone.removeAttribute('@loop');
-
-            // Replace all template variables in the clone
-            clone.innerHTML = clone.innerHTML
-                .replaceAll(`{{${itemName}.`, '{{') // Remove the item prefix
-                .replace(/{{\s*\$index\s*}}/g, index) // Handle index variable
-                .replace(/{{\s*([\w.]+)\s*}}/g, (_, key) => {
-                    // Handle nested properties
-                    const props = key.trim().split('.');
-                    let value = item;
-                    for (const prop of props) {
-                        value = value?.[prop];
-                        if (value === undefined) break;
-                    }
-                    return value !== undefined ? value : '';
-                });
-
-            parent.insertBefore(clone, el);
-        });
-
-        parent.removeChild(el);
-    });
-}
-
-/**
- * Updates filters and triggers re-rendering
- * @param {object} context - The SearchCore instance
- * @param {string} filterName - The name of the filter
- * @param {string} value - The filter value
- * @param {boolean} checked - Whether the filter is checked
- */
-function updateFilter(context, filterName, value, checked) {
-    if (checked) {
-        context.availableFilters[filterName] = value;
-        updateUrlParameter(filterName.toLowerCase(), value);
-    } else {
-        delete context.availableFilters[filterName];
-        removeUrlParameter(filterName.toLowerCase());
-    }
-
-    fetchData(context, context.inputElement.value.trim(), true).then(() => {
-        renderGrid(context);
-    });
-}
-
-/**
- * Handles pagination navigation
- * @param {object} context - The SearchCore instance
- * @param {number} page - The target page number
- */
-function goToPage(context, page) {
-    context.page = (page - 1) * context.gridProductsPerPage;
-    context.gridPage = page;
-    updateUrlParameter('page', page.toString());
-
-    fetchData(context, context.inputElement.value.trim(), true).then(() => {
-        renderGrid(context);
     });
 }
