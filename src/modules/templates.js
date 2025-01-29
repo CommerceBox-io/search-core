@@ -1,6 +1,7 @@
-import {fetchData} from "./fetchers";
-import {removeUrlParameter, updateUrlParameter} from "./utils";
+import {fetchData, fetchMaxPrice} from "./fetchers";
+import {initPagination, redirectToSearchPage, removeUrlParameter, updateUrlParameter} from "./utils";
 import {forEach} from "lodash";
+import {addPriceFilter} from "./domElements";
 
 /**
  * Generates a Shopify-style HTML template for grid, filters, and pagination.
@@ -40,33 +41,17 @@ export function generateTemplate() {
                        <span class="clear-filter" >x</span>
                     </div>
                  </div>
-                 <div class="filter categories">
-                    <div class="title">categories</div>
+                 <div @loop="filter in filters" class="filter {{filter.filter_name}}">
+                    <div class="title">{{filter.name}}</div>
                     <div class="items">
-                       <div>
-                          <div class="children-container">
-                             <div>
-                                <div class="filter-item root-category">Ρούχα (9)</div>
-                                <div class="children-container">
-                                   <div>
-                                      <div class="filter-item">Ανδρικά (6)</div>
-                                      <div class="children-container">
-                                         <div>
-                                            <div class="filter-item">Πλεκτά (6)</div>
-                                         </div>
-                                      </div>
-                                   </div>
-                                   <div>
-                                      <div class="filter-item">Γυναικεία (3)</div>
-                                      <div class="children-container">
-                                         <div>
-                                            <div class="filter-item">T-Shirts -Tops (3)</div>
-                                         </div>
-                                      </div>
-                                   </div>
+                       <div class="children-container" @loop="child in filter.children">
+                          <div class="filter-item root-category">{{child.name}} ({{child.doc_count}})</div>
+                            <div class="children-container" @loop="subchild in child.children">
+                                <div class="filter-item">{{subchild.name}} ({{subchild.doc_count}})</div>
+                                <div class="children-container" @loop="subsubchild in subchild.children">
+                                   <div class="filter-item">{{subsubchild.name}} ({{subsubchild.doc_count}})</div>
                                 </div>
-                             </div>
-                          </div>
+                            </div>
                        </div>
                     </div>
                  </div>
@@ -82,12 +67,70 @@ export function generateTemplate() {
  */
 export function renderGrid(context) {
     context['selectedFilters'] = selectedFilters(context);
+    context['filters'] = createFilter(context);
 
     context.gridContainerElement.innerHTML = replaceTemplateVariables(generateTemplate(), context);
+
+    console.log(context)
 
     processLoops(context.gridContainerElement, context);
     processConditionalBlocks(context.gridContainerElement, context);
     attachListeners(context.gridContainerElement, context);
+}
+
+function createFilter(context) {
+    const filters = [];
+    context.data.filters.forEach((filter) => {
+        if (filter.filter_name === "price") {
+            const query = context["inputElement"].value.trim();
+            fetchMaxPrice(context, query, true).then(() => {
+                const price = addPriceFilter(context);
+                filters.push({
+                    name: filter.filter_name,
+                    min: context.minPrice,
+                    max: context.maxPrice,
+                    minValue: context.priceMinValue,
+                    maxValue: context.priceMaxValue,
+                    step: 1,
+                })
+            })
+        } else {
+            const tree = filter.tree && filter.tree[0] ? filter.tree[0] : [];
+            filters.push({
+                name: filter.filter_name,
+                children: findChildrenCategories(context, tree, filter)
+            });
+        }
+    });
+    console.log(filters)
+    return filters;
+}
+
+function findChildrenCategories(context, tree, filter, rootCategory = false) {
+    const children = [];
+
+    // Recursively process child categories
+    if (tree.children && tree.children.length) {
+        tree.children.forEach((item) => {
+            const childCategories = findChildrenCategories(context, item, filter, tree.name === "Root Category");
+            children.push(...childCategories); // Append all child categories recursively
+        });
+    }
+
+    // Add the current category if it has a name and isn't the root category
+    const result = [];
+    if (tree.name && tree.name !== "Root Category") {
+        result.push({
+            name: tree.name,
+            doc_count: tree.doc_count,
+            children: children, // Add the processed children
+        });
+    } else {
+        // For root categories, only return children without wrapping
+        result.push(...children);
+    }
+
+    return result;
 }
 
 function selectedFilters(context) {
