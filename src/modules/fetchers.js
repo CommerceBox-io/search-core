@@ -132,8 +132,6 @@ export function fetchData(context, query, isGrid = false) {
         version: context.searchVersion
     };
 
-    console.log(props)
-
     forEach(context.availableFilters, (value, key) => {
         if (value) {
             props[`filt_${key}`] = value;

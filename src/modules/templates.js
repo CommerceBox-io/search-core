@@ -1,5 +1,6 @@
 import {fetchData} from "./fetchers";
-import {formatPrice, updateUrlParameter} from "./utils";
+import {removeUrlParameter, updateUrlParameter} from "./utils";
+import {forEach} from "lodash";
 
 /**
  * Generates a Shopify-style HTML template for grid, filters, and pagination.
@@ -16,15 +17,11 @@ export function generateTemplate() {
            <div class="totals">
               <span>{{totalProductCount}} {{t.result_plural}}</span>
               <div class="sorting-container">
-                <div @loop="sorting in sortByList" value="{{sorting.key}}">
-                        <span @if="sorting.key === sortBy" class="">a</span><span @else>b</span>
+                <select id="cb_sorting_select">
+                    <option @loop="sorting in sortByList" value="{{sorting.key}}">
                         {{sorting.value}}
-                </div>
-<!--                <select id="cb_sorting_select">-->
-<!--                    <option @loop="sorting in sortByList" value="{{sorting.key}}">-->
-<!--                        {{sorting.value}}-->
-<!--                    </option>-->
-<!--                </select>-->
+                    </option>
+                </select>
                 <select id="cb_order_select">
                     <option @loop="(order, key) in sortOrderList" value="{{key}}">
                         {{order}}
@@ -35,8 +32,13 @@ export function generateTemplate() {
             <div class="grid-content">
               <div class="filters">
                  <div class="title">{{t.filters}}</div>
-                 <div class="selected-filters" @if="selectedFilters.length">
-                    aaaaaa {{selectedFilters}}
+                 <div class="selected-filters" @if="selectedFilters.length !== null">
+                    <div class="selected-filter-item" 
+                         @loop="selectedFilter in selectedFilters" 
+                         @if="selectedFilter.value">
+                       {{selectedFilter.label}}
+                       <span class="clear-filter" >x</span>
+                    </div>
                  </div>
                  <div class="filter categories">
                     <div class="title">categories</div>
@@ -79,13 +81,59 @@ export function generateTemplate() {
  * @param {object} context - The SearchCore instance.
  */
 export function renderGrid(context) {
-    let html = generateTemplate();
-    html = replaceTemplateVariables(html, context);
+    context['selectedFilters'] = selectedFilters(context);
 
-    context.gridContainerElement.innerHTML = html;
+    context.gridContainerElement.innerHTML = replaceTemplateVariables(generateTemplate(), context);
+
     processLoops(context.gridContainerElement, context);
     processConditionalBlocks(context.gridContainerElement, context);
     attachListeners(context.gridContainerElement, context);
+}
+
+function selectedFilters(context) {
+    const selectedFilters = [
+        {
+            type: context.urlParams["categories"],
+            value: context.selectedCategory,
+            label: context.selectedCategory,
+        },
+        {
+            type: context.urlParams["brand"],
+            value: context.selectedBrand,
+            label: context.selectedBrand,
+        },
+        {
+            type: context.urlParams["maxPrice"],
+            value: context.priceMaxValue === 0 || context.priceMaxValue === context.maxPrice
+                ? null
+                : `${context.priceMaxValue}${context.currency}`,
+            label: `${context.t.max_price}: ${context.priceMaxValue}${context.currency}`,
+        },
+        {
+            type: context.urlParams["minPrice"],
+            value: context.priceMinValue === 0
+                ? null
+                : `${context.priceMinValue}${context.currency}`,
+            label: `${context.t.min_price}: ${context.priceMinValue}${context.currency}`,
+        },
+        {
+            type: context.urlParams["popupCategory"],
+            value: context.selectedPopupCategory,
+            label: context.selectedPopupCategory
+        }
+    ];
+
+    forEach(context.availableFilters, (value, key) => {
+        if (value) {
+            selectedFilters.push({
+                type: key,
+                value: value,
+                label: value
+            });
+        }
+    });
+
+    return selectedFilters;
 }
 
 /**
@@ -98,16 +146,6 @@ function evaluateExpression(expression, context) {
     try {
         const safeCtx = createSafeContext(context);
         const rewritten = rewriteExpression(expression);
-
-        // Add support for direct value comparison
-        if (expression.includes('===')) {
-            const [left, right] = expression.split('===').map(part => part.trim());
-            const leftValue = left.includes('.') ?
-                left.split('.').reduce((obj, key) => obj?.[key], safeCtx) :
-                safeCtx[left];
-            const rightValue = right.replace(/['"]/g, '');
-            return leftValue === rightValue;
-        }
 
         const fn = new Function('ctx', `
             try {
@@ -131,10 +169,8 @@ function evaluateExpression(expression, context) {
  */
 function createSafeContext(original) {
     if (original !== Object(original) || original === null) {
-        // Not an object, return as-is (string, number, etc.)
-        return original;
+        return original; // for non-objects (number, string, etc.) just return the value
     }
-
     return new Proxy(original, {
         get(target, prop) {
             if (!(prop in target)) {
@@ -151,14 +187,25 @@ function createSafeContext(original) {
 }
 
 /**
- * Naive approach: replace top-level identifiers with `ctx.<identifier>`
- * so that "data.results.length" becomes "ctx.data.results.length".
- * This *will* break if your expression has keywords, strings, or other edge cases.
+ * Minimal fix: skip rewriting "null", "true", "false", "undefined" as ctx.null, etc.
+ * Also skip rewriting identifiers if they're preceded by "."
+ * (because that means they're a property, e.g. "selectedFilter.value").
  */
 function rewriteExpression(expr) {
-    // A very naive regex: word characters that aren't preceded by '.' or ':'
-    // You may need something more sophisticated if your expressions are complex.
-    return expr.replace(/(?<![.\w])([a-zA-Z_$][0-9a-zA-Z_$]*)/g, 'ctx.$1');
+    return expr.replace(
+        /\b([a-zA-Z_$][0-9a-zA-Z_$]*)\b/g,
+        (match, p1, offset, fullString) => {
+            // Skip JS keywords that we shouldn't rewrite
+            if (["null", "true", "false", "undefined"].includes(p1)) {
+                return p1;
+            }
+            // If preceded by '.', it's already an object property (e.g. obj.foo)
+            if (offset > 0 && fullString[offset - 1] === '.') {
+                return match;
+            }
+            return 'ctx.' + match;
+        }
+    );
 }
 
 /**
@@ -168,21 +215,29 @@ function rewriteExpression(expr) {
  * @param {object} context - your search context or data object
  */
 function processConditionalBlocks(container, context) {
-    // Find all elements with @if, @elseif, or @else
-    const conditionalElems = Array.from(
-        container.querySelectorAll('[\\@if], [\\@elseif], [\\@else]')
-    );
+    // We collect elements that have @if, @elseif, @else in one pass.
+    const conditionalElems = [];
+
+    // If `container` itself has @if|@elseif|@else, include it
+    if (container.matches?.('[\\@if], [\\@elseif], [\\@else]')) {
+        conditionalElems.push(container);
+    }
+
+    // Then gather all descendant nodes that match
+    // (Works in modern browsers even on DocumentFragments)
+    conditionalElems.push(...container.querySelectorAll?.('[\\@if], [\\@elseif], [\\@else]') || []);
 
     let i = 0;
     while (i < conditionalElems.length) {
         const ifElem = conditionalElems[i];
+        // Only proceed if this element has an @if (start of a block group)
         const ifExpr = ifElem.getAttribute('@if');
         if (!ifExpr) {
             i++;
             continue;
         }
 
-        // We have an @if, gather subsequent @elseif or @else
+        // We have an @if, gather any subsequent @elseif or @else in the chain
         const blockGroup = [ifElem];
         let j = i + 1;
         while (j < conditionalElems.length) {
@@ -203,34 +258,40 @@ function processConditionalBlocks(container, context) {
         } else {
             // 2) Check any @elseif or @else
             for (let k = 1; k < blockGroup.length; k++) {
-                const elseifExpr = blockGroup[k].getAttribute('@elseif');
-                const isElse = blockGroup[k].hasAttribute('@else');
+                const el = blockGroup[k];
+                const elseifExpr = el.getAttribute('@elseif');
+                const isElse = el.hasAttribute('@else');
 
                 if (elseifExpr) {
+                    // Evaluate @elseif
                     if (evaluateExpression(elseifExpr, context)) {
                         keepIndex = k;
                         break;
                     }
                 } else if (isElse) {
-                    // Keep the @else if nothing else matched
+                    // This is the final @else
                     keepIndex = k;
                     break;
                 }
             }
         }
 
-        // Keep only the matched element, remove the rest
+        // Now we know which index (if any) to keep
         blockGroup.forEach((elem, idx) => {
             if (idx === keepIndex) {
+                // Keep it, remove the attributes
                 elem.removeAttribute('@if');
                 elem.removeAttribute('@elseif');
                 elem.removeAttribute('@else');
             } else {
-                elem.parentNode?.removeChild(elem);
+                // Remove it from the DOM
+                if (elem.parentNode) {
+                    elem.parentNode.removeChild(elem);
+                }
             }
         });
 
-        // Move on to next
+        // jump ahead
         i = j;
     }
 }
@@ -244,26 +305,28 @@ function processConditionalBlocks(container, context) {
  * inside attributes.
  */
 function processLoops(container, data) {
+    // Find elements with @loop (including nested ones).
     const loopElems = Array.from(container.querySelectorAll('[\\@loop]'));
 
     loopElems.forEach((originalEl) => {
         const rawExpr = originalEl.getAttribute('@loop')?.trim();
         if (!rawExpr) return;
 
-        // Remove the attribute from the original element
+        // Remove the @loop attribute so we don't reprocess it infinitely
         originalEl.removeAttribute('@loop');
 
-        // Parse the expression
+        // Determine if the loop is array-mode ("item in array")
+        // or object-mode ("(value, key) in object").
         let arrayMode = false;
         let objectMode = false;
-
         let itemAlias = '';
         let valueAlias = '';
         let keyAlias = '';
         let dataExpr = '';
 
-        // Handle "item in array" or "(value, key) in object"
+        // Regex for "(value, key) in object"
         const objectLoopPattern = /^\(\s*([^,]+)\s*,\s*([^)]+)\)\s+in\s+(.+)$/;
+        // Regex for "item in array"
         const arrayLoopPattern = /^([^()]+)\s+in\s+(.+)$/;
 
         let match = rawExpr.match(objectLoopPattern);
@@ -286,7 +349,7 @@ function processLoops(container, data) {
             return;
         }
 
-        // Navigate the data object path (e.g., "context.sortByList")
+        // Navigate the data object path (e.g. "context.sortByList") to get the array or object.
         const pathParts = dataExpr.split('.');
         let dataRef = data;
         for (const part of pathParts) {
@@ -295,11 +358,13 @@ function processLoops(container, data) {
         }
 
         if (dataRef == null) {
-            console.warn(`@loop: Could not find dataRef for "${dataExpr}"`);
+            console.warn(`@loop: Could not find data for "${dataExpr}"`);
             return;
         }
 
-        // Determine entries to iterate over (array vs object)
+        // Convert dataRef to entries: [key, value]
+        // - If arrayMode, index is key, item is value
+        // - If objectMode, key/value are from Object.entries
         let entries = [];
         if (arrayMode) {
             if (!Array.isArray(dataRef)) {
@@ -315,17 +380,28 @@ function processLoops(container, data) {
             entries = Object.entries(dataRef);
         }
 
-        // Iterate over entries and clone/replace
+        // Iterate over each entry, clone the originalEl, then process placeholders/conditionals
         entries.forEach(([key, value], index) => {
             const clone = originalEl.cloneNode(true);
 
-            // Replace placeholders in attributes and innerHTML
+            // Replace placeholders in *attributes*
             Array.from(clone.attributes).forEach((attr) => {
                 attr.value = attr.value.replace(/{{\s*([\w.$]+)\s*}}/g, (_, keyPath) => {
+                    // If keyPath includes '.', we might have nested properties
                     if (keyPath.includes('.')) {
+                        // E.g., "item.prop" or "valueAlias.nested"
                         const [alias, ...rest] = keyPath.split('.');
-                        if (alias === itemAlias && typeof entries[index][1] === 'object') {
-                            let nestedValue = entries[index][1];
+                        // Check if alias matches the arrayMode or objectMode variables
+                        if (alias === itemAlias && arrayMode) {
+                            let nestedValue = value;
+                            for (const part of rest) {
+                                nestedValue = nestedValue?.[part];
+                                if (nestedValue === undefined) break;
+                            }
+                            if (nestedValue !== undefined) return nestedValue;
+                        }
+                        if (alias === valueAlias && objectMode) {
+                            let nestedValue = value;
                             for (const part of rest) {
                                 nestedValue = nestedValue?.[part];
                                 if (nestedValue === undefined) break;
@@ -333,23 +409,47 @@ function processLoops(container, data) {
                             if (nestedValue !== undefined) return nestedValue;
                         }
                     }
-                    if (keyPath === valueAlias) return value;
-                    if (keyPath === keyAlias) return key;
-                    return `{{${keyPath}}}`; // Keep unresolved placeholders intact
+
+                    // Direct references to the loop variables
+                    if (keyPath === itemAlias && arrayMode) {
+                        return value;
+                    }
+                    if (keyPath === valueAlias && objectMode) {
+                        return value;
+                    }
+                    if (keyPath === keyAlias && objectMode) {
+                        return key;
+                    }
+
+                    // If it doesn't match, leave it unresolved
+                    return `{{${keyPath}}}`;
                 });
             });
 
+            // Build a loop context that includes the item/keys for placeholders.
             const loopContext = {
                 ...data,
-                [arrayMode ? itemAlias : valueAlias]: value,
-                [objectMode ? keyAlias : '$index']: key
+                // array mode => itemAlias
+                // object mode => valueAlias/keyAlias
+                ...(arrayMode ? { [itemAlias]: value, $index: index } : {}),
+                ...(objectMode ? { [valueAlias]: value, [keyAlias]: key } : {}),
             };
 
+            // Replace placeholders in *innerHTML*
             clone.innerHTML = clone.innerHTML.replace(/{{\s*([\w.$]+)\s*}}/g, (_, keyPath) => {
                 if (keyPath.includes('.')) {
                     const [alias, ...rest] = keyPath.split('.');
-                    if (alias === itemAlias && typeof entries[index][1] === 'object') {
-                        let nestedValue = entries[index][1];
+                    // Check if alias is itemAlias or valueAlias
+                    if (alias === itemAlias && arrayMode) {
+                        let nestedValue = value;
+                        for (const part of rest) {
+                            nestedValue = nestedValue?.[part];
+                            if (nestedValue === undefined) break;
+                        }
+                        if (nestedValue !== undefined) return nestedValue;
+                    }
+                    if (alias === valueAlias && objectMode) {
+                        let nestedValue = value;
                         for (const part of rest) {
                             nestedValue = nestedValue?.[part];
                             if (nestedValue === undefined) break;
@@ -357,21 +457,34 @@ function processLoops(container, data) {
                         if (nestedValue !== undefined) return nestedValue;
                     }
                 }
-                if (keyPath === valueAlias) return value;
-                if (keyPath === keyAlias) return key;
+                // direct references
+                if (keyPath === itemAlias && arrayMode) {
+                    return value;
+                }
+                if (keyPath === valueAlias && objectMode) {
+                    return value;
+                }
+                if (keyPath === keyAlias && objectMode) {
+                    return key;
+                }
                 return `{{${keyPath}}}`;
             });
 
-            processConditionalBlocks(clone, loopContext);
+            // ************ IMPORTANT FIX ************
+            // Put the clone into a DocumentFragment before processing conditionals & nested loops
+            const fragment = document.createDocumentFragment();
+            fragment.appendChild(clone);
 
-            // Process any nested loops
-            processLoops(clone, loopContext);
+            // Now run conditionals on the fragment so each clone has a valid parent
+            processConditionalBlocks(fragment, loopContext);
+            // Then process nested loops within that fragment
+            processLoops(fragment, loopContext);
 
-            // Insert the modified clone into the DOM
-            originalEl.parentNode.insertBefore(clone, originalEl);
+            // Finally, insert the fully-processed fragment back into the DOM
+            originalEl.parentNode.insertBefore(fragment, originalEl);
         });
 
-        // Remove the original element
+        // Remove the original element after all clones are inserted
         originalEl.parentNode.removeChild(originalEl);
     });
 }
