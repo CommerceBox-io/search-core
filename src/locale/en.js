@@ -32,7 +32,7 @@ export default {
     "mpatzaki": "Leg opening",
     "mikos": "Length",
     "maniki": "Sleeve",
-    "laimokopsi_ntekolte": "Neckline and décolleté",
+    "laimokopsi_ntekolte": "Neckline",
     "koumpoma": "Closure",
     "grammi": "Line",
     "clear_all": "Remove all",
