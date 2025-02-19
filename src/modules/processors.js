@@ -1285,7 +1285,6 @@ export function startCamera(context, cameraIndex) {
                 context.scannerButtonElement.classList.remove("active");
                 context.inputElement.value = decodedText;
                 context.completedSearch = 1;
-                // (your existing logic)
                 initPagination(context);
                 fetchData(context, decodedText).then(() => updatePopupResults(context));
             }
