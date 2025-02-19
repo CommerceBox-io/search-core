@@ -1261,3 +1261,41 @@ export function recentSearches(context) {
 export async function getSettings(context) {
     await fetchSettings(context);
 }
+
+/**
+ * Start device camera.
+ * @param {object} context - The SearchCore instance.
+ * @param {number} cameraIndex - The index of the camera to start.
+ */
+export function startCamera(context, cameraIndex) {
+    if (!context.html5QrCode) return;
+
+    const cameraId = context.availableCameras[cameraIndex].id;
+
+    context.html5QrCode
+        .start(
+            cameraId,
+            { fps: 10, qrbox: { width: 350, height: 350 } },
+            (decodedText) => {
+                context.html5QrCode.stop().then(() => {
+                    context.html5QrCode = null;
+                    context.loadingCamera = false;
+                });
+                context.scannerContainer.style.display = "none";
+                context.scannerButtonElement.classList.remove("active");
+                context.inputElement.value = decodedText;
+                context.completedSearch = 1;
+                // (your existing logic)
+                initPagination(context);
+                fetchData(context, decodedText).then(() => updatePopupResults(context));
+            }
+        )
+        .then(() => {
+            context.scannerButtonElement.classList.add("active");
+            context.loadingCamera = false;
+        })
+        .catch((err) => {
+            console.log("Failed to start camera:", err);
+            context.loadingCamera = false;
+        });
+}

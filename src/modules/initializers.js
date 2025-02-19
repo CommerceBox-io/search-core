@@ -10,7 +10,11 @@ import {
     initPagination,
     getUUID
 } from './utils';
-import {fetchAutoCompleteData, fetchData, fetchTemplate,} from './fetchers';
+import {
+    fetchAutoCompleteData,
+    fetchData,
+    fetchTemplate
+} from './fetchers';
 import {
     autocompleteWord,
     clearData,
@@ -19,8 +23,14 @@ import {
     processElements,
     updateGridPage,
     updatePopupResults,
+    startCamera
 } from './processors';
-import {debugQuery, updateMeasurerPosition,} from './domElements';
+import {
+    debugQuery,
+    updateMeasurerPosition,
+    setupButtonsContainer,
+    closeScanner
+} from './domElements';
 import {Html5Qrcode} from "html5-qrcode";
 import {fetchTemplateEndedEvent} from "./events";
 
@@ -500,55 +510,44 @@ export function initScanner(context) {
             return;
         }
         context.loadingCamera = true;
+
         if (context.html5QrCode) {
-            context["scannerContainer"].style.display = "none";
-            context["scannerButtonElement"].classList.remove("active");
-            context.html5QrCode.stop().then(() => {
-                context.html5QrCode = null;
-                context.loadingCamera = false;
-            });
+            closeScanner(context);
             return;
         }
-        context.html5QrCode = new Html5Qrcode(context.scannerContainerID);
-        context["scannerContainer"].style.display = "block";
+
+        context.scannerContainer.style.display = "block";
+        context.scannerContainer.style.position = "relative";
+
+        if (!context.cameraFeedElement) {
+            context.cameraFeedElement = document.createElement("div");
+            context.cameraFeedElement.id = "cameraFeedElement"; // or any unique ID
+            context.scannerContainer.appendChild(context.cameraFeedElement);
+        }
+
+        context.html5QrCode = new Html5Qrcode(context.cameraFeedElement.id);
+
+        setupButtonsContainer(context);
 
         Html5Qrcode.getCameras()
             .then((devices) => {
                 if (devices && devices.length) {
-                    const cameraId = devices[0].id;
-                    context.html5QrCode
-                        .start(
-                            cameraId,
-                            {
-                                fps: 10,
-                                qrbox: {width: 350, height: 350},
-                            },
-                            (decodedText) => {
-                                context.html5QrCode.stop().then(() => {
-                                    context.html5QrCode = null;
-                                    context.loadingCamera = false;
-                                });
-                                context["scannerContainer"].style.display = "none";
-                                context["scannerButtonElement"].classList.remove("active");
-                                context["inputElement"].value = decodedText;
-                                context.completedSearch = 1;
-                                initPagination(context);
-                                fetchData(context, decodedText).then(() => {
-                                    updatePopupResults(context);
-                                });
-                            }
-                        )
-                        .then(() => {
-                            context["scannerButtonElement"].classList.add("active");
-                            context.loadingCamera = false;
-                        })
-                        .catch((err) => {
-                            console.log(err);
-                        });
+                    context.availableCameras = devices;
+
+                    let backIndex = devices.findIndex((d) => d.label.toLowerCase().includes("back"));
+                    let frontIndex = devices.findIndex((d) => d.label.toLowerCase().includes("front"));
+                    if (backIndex === -1) backIndex = 0;
+                    if (frontIndex === -1) frontIndex = devices.length - 1;
+
+                    context.backCameraIndex = backIndex;
+                    context.frontCameraIndex = frontIndex;
+                    context.currentCameraIndex = backIndex;
+
+                    startCamera(context, context.currentCameraIndex);
                 }
             })
             .catch((err) => {
-                console.log(err);
+                console.log("Error getting cameras:", err);
             });
     } catch (error) {
         console.error("Error initializing scanner:", error);
