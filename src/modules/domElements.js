@@ -1,5 +1,5 @@
 import { fetchData } from "./fetchers";
-import { updateGridPage } from "./processors";
+import { updateGridPage, startCamera } from "./processors";
 import { updateUrlParameter, formatPrice, redirectToSearchPage } from "./utils";
 import {forEach} from "lodash";
 

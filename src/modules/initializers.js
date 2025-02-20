@@ -521,7 +521,7 @@ export function initScanner(context) {
 
         if (!context.cameraFeedElement) {
             context.cameraFeedElement = document.createElement("div");
-            context.cameraFeedElement.id = "cameraFeedElement"; // or any unique ID
+            context.cameraFeedElement.id = "cameraFeedElement";
             context.scannerContainer.appendChild(context.cameraFeedElement);
         }
 
