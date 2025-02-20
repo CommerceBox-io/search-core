@@ -1,5 +1,8 @@
 const path = require('path');
 const p = require('./package.json');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
+const fileName = 'bundle.js';
 
 module.exports = {
     entry: './src/index.js',
@@ -9,8 +12,8 @@ module.exports = {
             type: "umd",
             export: "default",
         },
-        filename: 'bundle.js',
-        path: path.resolve(__dirname, 'output/' + p.version),
+        filename: fileName,
+        path: path.resolve(__dirname, 'output', p.version),
     },
     module: {
         rules: [
@@ -31,4 +34,14 @@ module.exports = {
             },
         ],
     },
+    plugins: [
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: path.resolve(__dirname, `output/${p.version}/${fileName}`),
+                    to: path.resolve(__dirname, `output/${fileName}`),
+                },
+            ],
+        }),
+    ],
 };
