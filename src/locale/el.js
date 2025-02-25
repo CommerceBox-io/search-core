@@ -35,5 +35,6 @@ export default {
     "laimokopsi_ntekolte": "Λαιμόκοψη - Ντεκολτέ",
     "koumpoma": "Κούμπωμα",
     "grammi": "Γραμμή",
-    "clear_all": "Απαλοιφή όλων"
+    "clear_all": "Απαλοιφή όλων",
+    "relevance": "Συνάφεια"
 };

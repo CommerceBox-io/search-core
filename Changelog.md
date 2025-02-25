@@ -1,7 +1,11 @@
 # Change Log
 
-## [1.1.9] - 19-02-2025
+## [1.1.10] - 25-02-2025
 ### Added
+- Add relevance as default sorting option
+
+## [1.1.9] - 19-02-2025
+### Fixed
 - Make back camera default while scanning and add a switch and close button
 
 ## [1.1.8] - 14-01-2025

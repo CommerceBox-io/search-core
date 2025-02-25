@@ -112,6 +112,11 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
 
     context.sortByList = [
         {
+            key: "relevance",
+            value: context.t["relevance"],
+            format: null
+        },
+        {
             key: "price",
             value: context.t["price"],
             format: null

@@ -36,4 +36,5 @@ export default {
     "koumpoma": "Closure",
     "grammi": "Line",
     "clear_all": "Remove all",
+    "relevance": "Relevance",
 };
