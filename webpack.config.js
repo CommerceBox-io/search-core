@@ -1,6 +1,6 @@
 const path = require('path');
 const p = require('./package.json');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const fs = require('fs');
 
 const fileName = 'bundle.js';
 
@@ -35,13 +35,16 @@ module.exports = {
         ],
     },
     plugins: [
-        new CopyWebpackPlugin({
-            patterns: [
-                {
-                    from: path.resolve(__dirname, `output/${p.version}/${fileName}`),
-                    to: path.resolve(__dirname, `output/${fileName}`),
-                },
-            ],
-        }),
+        {
+            apply: (compiler) => {
+                compiler.hooks.afterEmit.tap('CopyFilePlugin', (compilation) => {
+                    const from = path.resolve(__dirname, `output/${p.version}/${fileName}`);
+                    const to = path.resolve(__dirname, `output/${fileName}`);
+
+                    fs.copyFileSync(from, to);
+                    console.log(`Copied ${from} to ${to}`);
+                });
+            }
+        }
     ],
 };

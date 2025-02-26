@@ -3,6 +3,8 @@
 ## [1.1.10] - 25-02-2025
 ### Added
 - Add relevance as default sorting option
+### Fixed
+- Fixed copy latest script after build
 
 ## [1.1.9] - 19-02-2025
 ### Fixed
