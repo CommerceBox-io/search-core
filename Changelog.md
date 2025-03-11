@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.11] - 11-03-2025
+### Fixed
+- Fixed searched redirect from popup link for external search page
+
 ## [1.1.10] - 25-02-2025
 ### Added
 - Add relevance as default sorting option
