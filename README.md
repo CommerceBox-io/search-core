@@ -13,7 +13,7 @@ or
 yarn add search-core@git:CommerceBox-io/search-core
 
 or add it as a script
-<script src="https://cdn.commercebox.io/search-core/1.1.8/bundle.js" />
+<script src="https://cdn.commercebox.io/search-core/bundle.js" />
 ```
 
 ## Usage
@@ -41,11 +41,12 @@ To initialize the search module, import SearchCore from the search-core package 
 | `uuid`              | `string`          | The UUID, hash of user ID.                      | `""`        |
 | `segment_id`        | `string`          | The segment ID.                                 | `""`        |
 | `segment_specialty_id` | `string`       | The segment specialty ID.                       | `""`        |
+| `urlParams`         | `Object`          | URL parameters to include in search requests.   | `{}`        |
 | `user`              | `string`          | The unique user identifier.                     | `""`        |
-| `locale`            | `string \| null`  | The locale.                                     | `""`        |
-| `platform`          | `string \| null`  | The platform.                                   | `""`        |
-| `sorting`           | `string \| null`  | The sorting.                                    | `""`        |
-| `translations`      | `Object \| null`  | The translations.                               | `{}`        |
+| `locale`            | `string \| null`  | The locale.                                     | `"el"`      |
+| `platform`          | `string \| null`  | The platform.                                   | `null`      |
+| `sorting`           | `string \| null`  | The sorting.                                    | `"relevance"` |
+| `translations`      | `Object \| null`  | The translations.                               | `null`      |
 
 Example with required options:
 
@@ -65,33 +66,109 @@ You can update segment options at any time after initialization by calling the `
 import SearchCore from 'search-core';
 
 document.addEventListener("DOMContentLoaded", () => {
-    const netApiSearch = process.env.API_URL;
-    const platform = process.env.PLATFORM;
-    const locale = "en";
-    
-
-    const uuid = "guest"; // Or user id
-
     const options = {
-        apiEndpoint: netApiSearch,
+        // Required parameters
+        apiEndpoint: 'https://api.commercebox.net/search',
         containerSelector: '#search-plugin-container',
-        layoutTemplate: '"https://cdn.commercebox.io/search/templates/template.html',
-        uuid: uuid,
-        user: 'unique_user_identifier',
-        locale: locale,
-        platform: platform,
+        
+        layoutTemplate: 'https://cdn.commercebox.io/search/templates/template.html',
+        externalGridSelector: '#external-results-grid',
+        searchPageRedirect: '/search-page',
+
+        uuid: 'guest', // Or unique user id
+        segment_id: '5',
+        segment_specialty_id: '12',
+        urlParams: {
+            q: "q",
+            categories: "categories",
+            scoped: "scoped",
+            brand: "brand",
+            maxPrice: "max-price",
+            minPrice: "min-price",
+            popupCategory: "popup-category",
+            page: "page"
+        },
+        locale: 'en', // Default is 'el'
+        platform: 'magento',
+        sorting: [
+            {
+                key: "relevance",
+                value: context.t["relevance"],
+                format: null
+            },
+            {
+                key: "price",
+                value: context.t["price"],
+                format: null
+            },
+            {
+                key: "top-sales",
+                value: context.t["sales"],
+                format: null
+            },
+            {
+                key: "date",
+                value: context.t["date"],
+                format: null
+            }
+        ],
+        translations: {
+            en: {
+                searchPlaceholder: 'Search for products...',
+                noResults: 'No products found',
+                showMore: 'Load more results'
+            },
+            el: {
+                searchPlaceholder: 'Αναζήτηση...',
+                noResults: 'Δεν βρέθηκαν αποτελέσματα',
+                showMore: 'Δες περισσότερα'
+            }
+        },
+        
+        // Callback functions for product actions
+        addToCartCallback: (productId, quantity) => {
+            console.log(`Adding product ${productId} to cart with quantity ${quantity}`);
+            // Your cart logic here
+        },
+        addToWishlistCallback: (productId) => {
+            console.log(`Adding product ${productId} to wishlist`);
+            // Your wishlist logic here
+        },
+        addToCompareCallback: (productId) => {
+            console.log(`Adding product ${productId} to compare list`);
+            // Your compare logic here
+        },
     };
 
+    // Initialize search
     const search = new SearchCore(options);
 
+    // Example of dynamically updating options
     document.getElementById('segment_id').addEventListener('change', (event) => {
         search.updateOptions({ segment_id: event.target.value });
     });
+    
     document.getElementById('segment_specialty_id').addEventListener('change', (event) => {
         search.updateOptions({ segment_specialty_id: event.target.value });
     });
+    
+    // Example of updating the API endpoint
+    document.getElementById('change_api').addEventListener('click', () => {
+        search.updateOptions({ apiEndpoint: 'https://api-test.commercebox.net/search' });
+    });
 });
 ```
+
+## Module Structure
+
+The SearchCore library consists of several modules:
+
+- **initializers**: Sets up core search functionality, initializes properties, user context, callbacks, and elements
+- **domElements**: Creates and manages DOM elements for the search interface
+- **events**: Defines custom events for search lifecycle phases
+- **fetchers**: Handles API communication for search functionality
+- **processors**: Processes templates and renders search results
+- **utils**: Provides utility functions for URL parameters, translations, and more
 
 ## LAYOUT
 
