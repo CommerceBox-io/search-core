@@ -2,7 +2,7 @@
 
 ## [1.1.11] - 11-03-2025
 ### Fixed
-- Fixed searched redirect from popup link for external search page
+- Fixed searched redirect from popup link for external search page and search button
 
 ## [1.1.10] - 25-02-2025
 ### Added

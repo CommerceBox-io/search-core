@@ -479,11 +479,15 @@ export function addEventListeners(context) {
     context["searchButtonElement"] && context["searchButtonElement"].addEventListener("click", () => {
         const query = context["inputElement"].value;
         if (query.length >= context.minQueryLength) {
-            clearData(context, false);
-            initPagination(context);
-            fetchData(context, query, true).then(() => {
-                updateGridPage(context);
-            });
+            if (!context.searchPageRedirect) {
+                clearData(context, false);
+                initPagination(context);
+                fetchData(context, query, true).then(() => {
+                    updateGridPage(context);
+                });
+            } else {
+                redirectToExternalSearchPage(context);
+            }
         }
     });
 
