@@ -334,7 +334,7 @@ export function selectedSortingBy(context) {
 
     const sortObj = context.sortByList.find(item => item.key === sortKey);
 
-    if (sortObj.format) {
+    if (sortObj?.format) {
         sortKey = getSortingAttribute(sortObj.format, sortObj.key);
     }
 
@@ -360,7 +360,7 @@ export function selectedSortingOrder(context) {
 
     const sortObj = context.sortByList.find(item => item.key === sortKey);
 
-    if (sortObj.format) {
+    if (sortObj?.format) {
         return getSortingOrder(sortObj.format, sortObj.key);
     }
 
