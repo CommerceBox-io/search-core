@@ -136,31 +136,40 @@ export function updatePopupResults(context) {
                 window.location.href = item.url;
             });
 
-            const leftColumn = document.createElement("div");
-            leftColumn.className = "left-column";
-            const image = document.createElement("img");
-            image.src = item.image;
-            image.alt = item.name;
-            leftColumn.appendChild(image);
+            if (context.showProductImage) {
+                const leftColumn = document.createElement("div");
+                leftColumn.className = "left-column";
+                const image = document.createElement("img");
+                image.src = item.image;
+                image.alt = item.name;
+                leftColumn.appendChild(image);
+                element.appendChild(leftColumn);
+            }
 
             const rightColumn = document.createElement("div");
             rightColumn.className = "right-column";
-            const name = document.createElement("div");
-            name.className = "name";
-            name.innerHTML = item.name_high && item.name_high !== "non highlighted name" ? item.name_high : item.name;
-            rightColumn.appendChild(name);
 
-            const sku = document.createElement("div");
-            sku.className = "sku";
-            sku.innerHTML = item.sku;
-            rightColumn.appendChild(sku);
+            if (context.showProductTitle) {
+                const name = document.createElement("div");
+                name.className = "name";
+                name.innerHTML = item.name_high && item.name_high !== "non highlighted name" ? item.name_high : item.name;
+                rightColumn.appendChild(name);
+            }
 
-            const price = document.createElement("div");
-            price.className = "price";
-            price.innerHTML = item.price;
-            rightColumn.appendChild(price);
+            if (context.showProductSku) {
+                const sku = document.createElement("div");
+                sku.className = "sku";
+                sku.innerHTML = item.sku;
+                rightColumn.appendChild(sku);
+            }
 
-            element.appendChild(leftColumn);
+            if (context.showProductPrice) {
+                const price = document.createElement("div");
+                price.className = "price";
+                price.innerHTML = item.price;
+                rightColumn.appendChild(price);
+            }
+
             element.appendChild(rightColumn);
             context["resultsElement"].appendChild(element);
         });

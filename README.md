@@ -28,27 +28,44 @@ To initialize the search module, import SearchCore from the search-core package 
 
 ### Available options:
 
-| **Option**                  | **Type**          | **Description**                                  | **Default** |
-|-----------------------------|-------------------|--------------------------------------------------|-------------|
-| `apiEndpoint`       | `string`          | The API endpoint for search requests.           | Required    |
-| `containerSelector` | `string`          | The CSS selector for the container element.     | Required    |
-| `layoutTemplate`    | `string`          | The layout template.                            | `""`        |
-| `externalGridSelector` | `string`       | The external grid ID.                           | `""`        |
-| `searchPageRedirect`| `string`          | The search page redirect URL.                   | `""`        |
-| `addToCartCallback` | `Function`        | The callback function for adding to cart.       | `null`      |
-| `addToWishlistCallback` | `Function`    | The callback function for adding to wishlist.   | `null`      |
-| `addToCompareCallback` | `Function`     | The callback function for adding to compare.    | `null`      |
-| `uuid`              | `string`          | The UUID, hash of user ID.                      | `""`        |
-| `segment_id`        | `string`          | The segment ID.                                 | `""`        |
-| `segment_specialty_id` | `string`       | The segment specialty ID.                       | `""`        |
-| `urlParams`         | `Object`          | URL parameters to include in search requests.   | `{}`        |
-| `user`              | `string`          | The unique user identifier.                     | `""`        |
-| `locale`            | `string \| null`  | The locale.                                     | `"el"`      |
-| `platform`          | `string \| null`  | The platform.                                   | `null`      |
-| `sorting`           | `string \| null`  | The sorting.                                    | `"relevance"` |
-| `translations`      | `Object \| null`  | The translations.                               | `null`      |
+| **Option**              | **Type**          | **Description**                               | **Default** |
+|-------------------------|-------------------|-----------------------------------------------|-------------|
+| `apiEndpoint`           | `string`          | The API endpoint for search requests.         | Required    |
+| `containerSelector`     | `string`          | The CSS selector for the container element.   | Required    |
+| `layoutTemplate`        | `string`          | The layout template.                          | `""`        |
+| `externalGridSelector`  | `string`       | The external grid ID.                         | `""`        |
+| `searchPageRedirect`    | `string`          | The search page redirect URL.                 | `""`        |
+| `addToCartCallback`     | `Function`        | The callback function for adding to cart.     | `null`      |
+| `addToWishlistCallback` | `Function`    | The callback function for adding to wishlist. | `null`      |
+| `addToCompareCallback`  | `Function`     | The callback function for adding to compare.  | `null`      |
+| `uuid`                  | `string`          | The UUID, hash of user ID.                    | `""`        |
+| `segment_id`            | `string`          | The segment ID.                               | `""`        |
+| `segment_specialty_id`  | `string`       | The segment specialty ID.                     | `""`        |
+| `urlParams`             | `Object`          | URL parameters to include in search requests. | `{}`        |
+| `user`                  | `string`          | The unique user identifier.                   | `""`        |
+| `locale`                | `string \| null`  | The locale.                                   | `"el"`      |
+| `platform`              | `string \| null`  | The platform.                                 | `null`      |
+| `sorting`               | `string \| null`  | The sorting.                                  | `"relevance"` |
+| `translations`          | `Object \| null`  | The translations.                             | `null`      |
+| `showProductImage`      | `boolean`         | Show/hide product images in popup results.    | `true`      |
+| `showProductTitle`      | `boolean`         | Show/hide product titles in popup results.    | `true`      |
+| `showProductPrice`      | `boolean`         | Show/hide product prices in popup results.    | `true`      |
+| `showProductSku`        | `boolean`         | Show/hide product SKU in popup results.       | `true`      |
 
 Example with required options:
+
+```javascript
+import SearchCore from 'search-core'
+
+const options = {
+    apiEndpoint: `https://api.commercebox.net/search`,
+    containerSelector: '#search-plugin-container',
+};
+
+new SearchCore(options);
+```
+
+Example with popup display options:
 
 ```javascript
 import SearchCore from 'search-core'
@@ -74,6 +91,11 @@ document.addEventListener("DOMContentLoaded", () => {
         layoutTemplate: 'https://cdn.commercebox.io/search/templates/template.html',
         externalGridSelector: '#external-results-grid',
         searchPageRedirect: '/search-page',
+        
+        showProductImage: true,
+        showProductTitle: true,
+        showProductPrice: false,
+        showProductSku: false,
 
         uuid: 'guest', // Or unique user id
         segment_id: '5',

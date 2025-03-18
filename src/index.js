@@ -47,7 +47,11 @@ class SearchCore {
                     locale = null,
                     platform = null,
                     sorting = null,
-                    translations = null
+                    translations = null,
+                    showProductImage = true,
+                    showProductTitle = true,
+                    showProductPrice = true,
+                    showProductSku = true
                 }) {
         this.defaultLocale = "el"
         this.t = {};
@@ -64,6 +68,10 @@ class SearchCore {
         this.translations = translations;
         this.searchVersion = 2;
         this.autocompleteVersion = 2;
+        this.showProductImage = showProductImage;
+        this.showProductTitle = showProductTitle;
+        this.showProductPrice = showProductPrice;
+        this.showProductSku = showProductSku;
 
         getSettings(this).finally(() => {
             loadLocaleTranslations(this, this.locale);

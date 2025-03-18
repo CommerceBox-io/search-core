@@ -1,6 +1,10 @@
 # Change Log
 
-## [1.1.11] - 11-03-2025
+## [1.2.1] - 11-18-2025
+### Added
+- Added init parameters to show/hide price, title, image and sku in popup
+
+## [1.1.11] - 11-0e3-2025
 ### Fixed
 - Fixed searched redirect from popup link for external search page and search button
 
