@@ -55,7 +55,7 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
         q: "q",
         categories: "categories",
         scoped: "scoped",
-        brand: "brand",
+        brand: "popup-brand",
         maxPrice: "max-price",
         minPrice: "min-price",
         popupCategory: "popup-category",
@@ -63,7 +63,6 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     }
 
     context.urlParams = {...defaultParams, ...urlParams};
-
 
     context.data = null;
     context.suggestedWord = null;
