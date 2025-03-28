@@ -138,6 +138,10 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     }
 
     context.measurer = document.createElement("span");
+
+    if (context.consoleDebug) {
+        console.log("Initialize Properties: ", context);
+    }
 }
 
 /**

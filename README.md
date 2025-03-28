@@ -65,19 +65,7 @@ const options = {
 new SearchCore(options);
 ```
 
-Example with popup display options:
-
-```javascript
-import SearchCore from 'search-core'
-
-const options = {
-    apiEndpoint: `https://api.commercebox.net/search`,
-    containerSelector: '#search-plugin-container',
-};
-
-new SearchCore(options);
-```
-You can update segment options at any time after initialization by calling the `updateOptions` method:
+Example with all available options:
 
 ```javascript
 import SearchCore from 'search-core';
