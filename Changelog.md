@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.2] - 02-04-2025
+### Added
+- On search input click show the popup if there is a qualified value
+
 ## [1.2.1] - 11-18-2025
 ### Added
 - Added init parameters to show/hide price, title, image and sku in popup

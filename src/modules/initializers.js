@@ -467,6 +467,17 @@ export function addEventListeners(context) {
         }
     });
 
+    context["inputElement"] && context["inputElement"].addEventListener("click", (e) => {
+        const query = e.target.value.trim();
+        if (query.length >= context.minQueryLength) {
+            initPagination(context);
+            fetchData(context, query).then(() => {
+                clearSelectedFilters(context);
+                updatePopupResults(context);
+            });
+        }
+    });
+
     context["clearButtonElement"] && context["clearButtonElement"].addEventListener("click", () => {
         clearData(context);
     });
