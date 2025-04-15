@@ -328,10 +328,10 @@ export function generateGrid(context) {
             sku.innerHTML = `SKU: ${item.sku}`;
 
             const description = document.createElement("div");
-            const words = item.desc.split(" ");
+            const words = item.desc?.split(" ") || [];
             const wordsCount = 25;
             description.className = "description";
-            description.innerHTML = words.length > wordsCount ? `${words.slice(0, wordsCount).join(" ")}...` : item.desc;
+            description.innerHTML = words.length > wordsCount ? `${words.slice(0, wordsCount).join(" ")}...` : (item.desc || "");
 
             const image = document.createElement("img");
             image.className = "image";
@@ -1180,10 +1180,21 @@ export function updateBrandContainer(context) {
         brands.forEach((item) => {
             const element = document.createElement("div");
             element.textContent = `${item.key} (${item.doc_count})`;
-            element.addEventListener("click", () => {
-                initPagination(context);
-                redirectToSearchPage(context, context.urlParams["brand"], item.key);
-            });
+            if (item.url) {
+                element.addEventListener("click", () => {
+                    window.location.href = item.url;
+                });
+            } else if (item.id) {
+                element.addEventListener("click", () => {
+                    initPagination(context);
+                    redirectToSearchPage(context, context.urlParams["brand"], item.id);
+                });
+            } else {
+                element.addEventListener("click", () => {
+                    initPagination(context);
+                    redirectToSearchPage(context, context.urlParams["brand"], item.key);
+                });
+            }
             list.appendChild(element);
         });
         context["brandsContainerElement"].appendChild(list);
