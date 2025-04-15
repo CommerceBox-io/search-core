@@ -55,7 +55,7 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
         q: "q",
         categories: "categories",
         scoped: "scoped",
-        brand: "popup-brand",
+        brand: "brand",
         maxPrice: "max-price",
         minPrice: "min-price",
         popupCategory: "popup-category",
