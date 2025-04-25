@@ -45,13 +45,40 @@ import {fetchTemplateEndedEvent} from "./events";
  * @param {object} urlParams - Url parameters
  */
 export function initializeProperties(context, layoutTemplate, externalGridSelector,  searchPageRedirect, segment_id, segment_specialty_id, urlParams) {
+    const appearanceSettings = context.settings.appearance || {
+        currency: null,
+        debug_query_container_id: null,
+        grid_products_per_page: null,
+        has_delay_on_key_press: null,
+        key_press_delay: null,
+        layout_template: null,
+        min_chars: null,
+        pagination_type: null,
+        platform: null,
+        popup_products_per_page: null,
+        scanner_container_id: null,
+        search_page_redirect: "",
+        show_product_image: true,
+        show_product_price: true,
+        show_product_sku: true,
+        show_product_title: true,
+        sorting: null,
+        translations: null,
+        url_params: null,
+    }
+
     context.layoutTemplate = layoutTemplate;
     context.externalGridSelector = externalGridSelector;
-    context.searchPageRedirect = searchPageRedirect;
+    context.searchPageRedirect = searchPageRedirect || appearanceSettings.search_page_redirect;
     context.segment_id = segment_id;
     context.segment_specialty_id = segment_specialty_id;
+    context.platform = context.platform || appearanceSettings.platform;
+    context.showProductImage = context.showProductImage || appearanceSettings.show_product_image;
+    context.showProductTitle = context.showProductTitle || appearanceSettings.show_product_title;
+    context.showProductPrice = context.showProductPrice || appearanceSettings.show_product_price;
+    context.showProductSku = context.showProductSku || appearanceSettings.show_product_sku;
 
-    const defaultParams = {
+    const defaultParams = appearanceSettings.url_params || {
         q: "q",
         categories: "categories",
         scoped: "scoped",
@@ -61,7 +88,6 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
         popupCategory: "popup-category",
         page: "page"
     }
-
     context.urlParams = {...defaultParams, ...urlParams};
 
     context.data = null;
@@ -71,7 +97,7 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     context.totalProductCount = null;
     context.html5QrCode = null;
 
-    context.hasDelayOnKeyPress = false;
+    context.hasDelayOnKeyPress = appearanceSettings.has_delay_on_key_press || false;
     context.loadingCamera = false;
     context.consoleDebug = !!(new URL(window.location)).searchParams.get('debug');
 
@@ -83,18 +109,19 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     context.priceMaxValue = 0;
     context.priceMinValue = 0;
     context.gridPage = initGridPage();
-    context.minQueryLength = 2;
-    context.gridProductsPerPage = 12;
-    context.typeDelay = 200;
+    context.minQueryLength = appearanceSettings.min_chars || 2;
+    context.gridProductsPerPage = appearanceSettings.grid_products_per_page || 12;
+    context.popupProductsPerPage = appearanceSettings.popup_products_per_page || 4;
+    context.typeDelay = appearanceSettings.key_press_delay || 200;
 
     context.selectedCategory = "";
     context.selectedPopupCategory = "";
     context.selectedBrand = "";
-    context.currency = "€";
-    context.scannerContainerID = "scanner-container";
-    context.debugQueryContainerID = "debug-query-container";
-    context.paginationType = "numeric";
-    context.defautlTemplate = "https://cdn.commercebox.io/search/templates/template.html";
+    context.currency = appearanceSettings.currency || "€";
+    context.scannerContainerID = appearanceSettings.scanner_container_id || "scanner-container";
+    context.debugQueryContainerID = appearanceSettings.debug_query_container_id || "debug-query-container";
+    context.paginationType = appearanceSettings.pagination_type || "numeric";
+    context.defautlTemplate = appearanceSettings.layout_template || "https://cdn.commercebox.io/search/templates/template.html";
 
     context.placeholders = [];
     context.autocompleteTermsList = [];
@@ -132,8 +159,10 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
         }
     ];
 
-    if (context.sorting && Object.keys(context.sorting).length > 0 && context.sorting[context.locale]) {
+    if (context.sorting && Object.keys(context.sorting).length > 0 && (context.sorting[context.locale])) {
         context.sortByList = context.sorting[context.locale];
+    } else if (appearanceSettings.sorting && Object.keys(appearanceSettings.sorting).length > 0 && (appearanceSettings.sorting[context.locale])) {
+        context.sortByList = appearanceSettings.sorting[context.locale];
     }
 
     context.measurer = document.createElement("span");

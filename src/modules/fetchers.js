@@ -100,7 +100,7 @@ export function fetchAutoCompleteData(context, query) {
  * @returns {Promise} - The promise representing the fetch operation.
  */
 export function fetchData(context, query, isGrid = false) {
-    const limit = isGrid ? context.gridProductsPerPage : 4;
+    const limit = isGrid ? context.gridProductsPerPage : context.popupProductsPerPage;
     const page = isGrid ? context.page : 0;
     const scope_search = context["scopedSearchDropdown"] ? context["scopedSearchDropdown"].value : "";
     const maxPrice = Math.ceil(context.maxPrice) === context.priceMaxValue && context.priceMinValue === context.minPrice ? 0 : context.priceMaxValue;
@@ -212,7 +212,7 @@ export function fetchSettings(context) {
 
 // TODO: this is a temporary way to get max price, need to be sent in fetchData
 export function fetchMaxPrice(context, query, isGrid = false) {
-    const limit = isGrid ? context.gridProductsPerPage : 4;
+    const limit = isGrid ? context.gridProductsPerPage : context.popupProductsPerPage;
     const page = isGrid ? context.page : 0;
     const scope_search = context["scopedSearchDropdown"] ? context["scopedSearchDropdown"].value : "";
     const props = {

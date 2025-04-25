@@ -33,6 +33,7 @@ class SearchCore {
     constructor({
                     apiEndpoint,
                     containerSelector,
+                    locale,
                     layoutTemplate = "",
                     externalGridSelector = "",
                     searchPageRedirect = "",
@@ -44,26 +45,25 @@ class SearchCore {
                     segment_specialty_id = "",
                     urlParams = {},
                     user = "",
-                    locale = null,
                     platform = null,
                     sorting = null,
                     translations = null,
-                    showProductImage = true,
-                    showProductTitle = true,
-                    showProductPrice = true,
-                    showProductSku = true
+                    showProductImage = null,
+                    showProductTitle = null,
+                    showProductPrice = null,
+                    showProductSku = null
                 }) {
         this.defaultLocale = "el"
         this.t = {};
         this.userParam = user;
         this.apiEndpoint = apiEndpoint;
+        this.locale = locale ? locale : this.defaultLocale;
         this.autoCompleteUrl = `${apiEndpoint}/autocomplete`;
         this.settingsUrl = `${apiEndpoint}/settings`;
         this.container = document.querySelector(containerSelector);
         this.elementsMapping = getElementsMapping();
         this.settings = [];
         this.platform = platform;
-        this.locale = locale ? locale : this.defaultLocale;
         this.sorting = sorting;
         this.translations = translations;
         this.searchVersion = 2;
@@ -74,7 +74,7 @@ class SearchCore {
         this.showProductSku = showProductSku;
 
         getSettings(this).finally(() => {
-            loadLocaleTranslations(this, this.locale);
+            loadLocaleTranslations(this);
             initializeUser(this, uuid);
             initializeCallbacks(this, addToCartCallback, addToWishlistCallback, addToCompareCallback);
             initializeProperties(this, layoutTemplate, externalGridSelector, searchPageRedirect, segment_id, segment_specialty_id, urlParams);

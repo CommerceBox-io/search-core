@@ -280,14 +280,20 @@ export function usefulAutocompleteTerms(context, list, query) {
 /**
  * Loads locale-specific translations if the file exists.
  * @param {Object} context - The SearchCore instance.
- * @param {string} locale - The locale to load.
  */
-export function loadLocaleTranslations(context, locale) {
-    context.t = translations[locale] || translations[context.defaultLocale];
-    if (context.translations && context.translations[locale] && Object.keys(context.translations).length > 0) {
+export function loadLocaleTranslations(context) {
+    const { translations: settingsTranslations = null } = context.settings.appearance || {};
+    context.t = translations[context.locale] || {};
+    if (settingsTranslations && settingsTranslations[context.locale] && Object.keys(settingsTranslations).length > 0) {
         context.t = {
             ...context.t,
-            ...context.translations[locale]
+            ...settingsTranslations[context.locale]
+        }
+    }
+    if (context.translations && context.translations[context.locale] && Object.keys(context.translations).length > 0) {
+        context.t = {
+            ...context.t,
+            ...context.translations[context.locale]
         }
     }
 }

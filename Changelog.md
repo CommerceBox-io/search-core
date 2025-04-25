@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.3.1] - 25-04-2025
+### Added
+- Get appearance settings from admin panel to override the default attributes but not the ones from init.
+- Make locale required 
+
 ## [1.2.2] - 02-04-2025
 ### Added
 - On search input click show the popup if there is a qualified value
