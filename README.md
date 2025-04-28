@@ -105,22 +105,44 @@ document.addEventListener("DOMContentLoaded", () => {
             el: [
                 {
                     key: "relevance",
-                    value: context.t["relevance"],
+                    value: "Συνάφεια",
                     format: null
                 },
                 {
                     key: "price",
-                    value: context.t["price"],
+                    value: "Τιμή",
                     format: null
                 },
                 {
                     key: "top-sales",
-                    value: context.t["sales"],
+                    value: "Πωλήσεις",
                     format: null
                 },
                 {
                     key: "date",
-                    value: context.t["date"],
+                    value: "Ημερομηνία",
+                    format: null
+                }
+            ],
+            en: [
+                {
+                    key: "relevance",
+                    value: "Ρelevance",
+                    format: null
+                },
+                {
+                    key: "price",
+                    value: "Πrice",
+                    format: null
+                },
+                {
+                    key: "top-sales",
+                    value: "Sales",
+                    format: null
+                },
+                {
+                    key: "date",
+                    value: "Date",
                     format: null
                 }
             ]
@@ -168,6 +190,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Example of updating the API endpoint
     document.getElementById('change_api').addEventListener('click', () => {
         search.updateOptions({ apiEndpoint: 'https://api-test.commercebox.net/search' });
+    });
+    
+    // In case of externaly wanting to close the popup
+    document.addEventListener("click", function(event) {
+        const isInSearchInput = event.target.closest(".search-input-container");
+        const isInSearchPopup = event.target.closest(".search-popup");
+        const isInSearchScanner = event.target.closest("#scanner-container");
+        
+        if (!isInSearchInput && !isInSearchPopup && !isInSearchScanner) {
+            document.dispatchEvent(new CustomEvent("cbClosePopup", {detail: null} ));
+        }
     });
 });
 ```
