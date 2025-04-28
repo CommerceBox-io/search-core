@@ -551,6 +551,10 @@ export function addEventListeners(context) {
         debugQuery(context);
     });
 
+    document.addEventListener("cbClosePopup", (event) => {
+        clearData(context);
+    });
+
     updateMeasurerPosition(context);
 }
 
