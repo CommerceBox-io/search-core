@@ -1101,6 +1101,20 @@ export function clearData(context, clearInput = true) {
 }
 
 /**
+ * Closes the popup
+ * @param {object} context - The SearchCore instance.
+ */
+export function closePopup(context) {
+    context["inputElement"].value = "";
+    context["resultsElement"].innerHTML = "";
+    context["resultsElement"].classList.remove("show");
+    context.container.classList.remove("has-results");
+    context.measurer.textContent = "";
+    context.suggestedWord = "";
+    context["suggestionElement"].innerHTML = "";
+}
+
+/**
  * Clears the suggested word and resets the measurer.
  * @param {object} context - The SearchCore instance.
  */

@@ -5,6 +5,8 @@
 - Get appearance settings from admin panel to override the default attributes but not the ones from init.
 - Make locale required
 - Add event listener to close the popup
+ ### Fixed
+- Fixed constant input focus on popup close
 
 ## [1.2.2] - 02-04-2025
 ### Added

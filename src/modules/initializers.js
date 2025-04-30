@@ -23,7 +23,8 @@ import {
     processElements,
     updateGridPage,
     updatePopupResults,
-    startCamera
+    startCamera,
+    closePopup
 } from './processors';
 import {
     debugQuery,
@@ -552,7 +553,7 @@ export function addEventListeners(context) {
     });
 
     document.addEventListener("cbClosePopup", (event) => {
-        clearData(context);
+        closePopup(context);
     });
 
     updateMeasurerPosition(context);
