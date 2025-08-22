@@ -78,8 +78,10 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     context.showProductTitle = context.showProductTitle || appearanceSettings.show_product_title;
     context.showProductPrice = context.showProductPrice || appearanceSettings.show_product_price;
     context.showProductSku = context.showProductSku || appearanceSettings.show_product_sku;
+    context.translations = context.translations || (appearanceSettings.translations && typeof appearanceSettings.translations === "string" ? JSON.parse(appearanceSettings.translations) : appearanceSettings.translations);
 
-    const defaultParams = appearanceSettings.url_params || {
+    const urlParamsFromSettings = appearanceSettings.url_params && typeof appearanceSettings.url_params === "string" ? JSON.parse(appearanceSettings.url_params) : appearanceSettings.url_params;
+    const defaultParams = urlParamsFromSettings || {
         q: "q",
         categories: "categories",
         scoped: "scoped",

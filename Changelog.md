@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.2] - 22-08-2025
+### Fixed
+- Check for type of settings attributes and act accordingly
+
 ## [1.3.1] - 25-04-2025
 ### Added
 - Get appearance settings from admin panel to override the default attributes but not the ones from init.
