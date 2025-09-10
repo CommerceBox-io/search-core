@@ -5,6 +5,7 @@ import {
     redirectToSearchPage,
     formatPrice,
     initPagination,
+    isValidUrl,
 } from './utils';
 import {
     constructElement,
@@ -1165,7 +1166,11 @@ export function relativeCategories(context) {
             element.addEventListener("click", () => {
                 removeUrlParameter(context.urlParams["categories"]);
                 initPagination(context);
-                redirectToSearchPage(context, context.urlParams["popupCategory"], item.name);
+                if (item.url && isValidUrl(item.url)) {
+                    window.location.href = item.url;
+                } else {
+                    redirectToSearchPage(context, context.urlParams["popupCategory"], item.name);
+                }
             });
             list.appendChild(element);
         });

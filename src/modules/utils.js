@@ -13,8 +13,12 @@ const translations = {
  * @returns {boolean} - True if valid URL, otherwise false.
  */
 export function isValidUrl(string) {
-    let urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-    return urlRegex.test(string);
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
 }
 
 /**

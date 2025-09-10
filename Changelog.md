@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.3] - 10-09-2025
+### Added
+- Check if popup categories have a specific url and redirect to it if it is valid
+
 ## [1.3.2] - 22-08-2025
 ### Fixed
 - Check for type of settings attributes and act accordingly
