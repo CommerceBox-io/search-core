@@ -79,9 +79,8 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
     context.showProductPrice = context.showProductPrice || appearanceSettings.show_product_price;
     context.showProductSku = context.showProductSku || appearanceSettings.show_product_sku;
     context.translations = context.translations || (appearanceSettings.translations && typeof appearanceSettings.translations === "string" ? JSON.parse(appearanceSettings.translations) : appearanceSettings.translations);
-
-    const urlParamsFromSettings = appearanceSettings.url_params && typeof appearanceSettings.url_params === "string" ? JSON.parse(appearanceSettings.url_params) : appearanceSettings.url_params;
-    const defaultParams = urlParamsFromSettings || {
+    console.log(context.urlParams)
+    const defaultParams = {
         q: "q",
         categories: "categories",
         scoped: "scoped",
@@ -90,8 +89,26 @@ export function initializeProperties(context, layoutTemplate, externalGridSelect
         minPrice: "min-price",
         popupCategory: "popup-category",
         page: "page"
+    };
+
+    let parsedSettingsParams = {};
+    if (appearanceSettings.url_params) {
+        try {
+            parsedSettingsParams = typeof appearanceSettings.url_params === "string"
+                ? JSON.parse(appearanceSettings.url_params)
+                : appearanceSettings.url_params;
+        } catch (error) {
+            console.warn("Failed to parse url_params from settings:", error);
+        }
     }
-    context.urlParams = {...defaultParams, ...urlParams};
+
+    context.urlParams = {
+        ...defaultParams,
+        ...parsedSettingsParams,
+        ...urlParams
+    };
+
+    console.log(context.urlParams)
 
     context.data = null;
     context.suggestedWord = null;

@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.4] - 15-09-2025
+### Fixed
+- Make sure there is always url params available
+
 ## [1.3.3] - 10-09-2025
 ### Added
 - Check if popup categories have a specific url and redirect to it if it is valid
