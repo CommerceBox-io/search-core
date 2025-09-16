@@ -137,7 +137,7 @@ export function updatePopupResults(context) {
                 window.location.href = item.url;
             });
 
-            if (context.showProductImage) {
+            if (context.showProductImage && item.image) {
                 const leftColumn = document.createElement("div");
                 leftColumn.className = "left-column";
                 const image = document.createElement("img");
@@ -150,21 +150,21 @@ export function updatePopupResults(context) {
             const rightColumn = document.createElement("div");
             rightColumn.className = "right-column";
 
-            if (context.showProductTitle) {
+            if (context.showProductTitle && item.name) {
                 const name = document.createElement("div");
                 name.className = "name";
                 name.innerHTML = item.name_high && item.name_high !== "non highlighted name" ? item.name_high : item.name;
                 rightColumn.appendChild(name);
             }
 
-            if (context.showProductSku) {
+            if (context.showProductSku && item.sku) {
                 const sku = document.createElement("div");
                 sku.className = "sku";
                 sku.innerHTML = item.sku;
                 rightColumn.appendChild(sku);
             }
 
-            if (context.showProductPrice) {
+            if (context.showProductPrice && item.price) {
                 const price = document.createElement("div");
                 price.className = "price";
                 price.innerHTML = item.price;
@@ -589,7 +589,6 @@ function createDynamicFilters(context, filters) {
     return filtersContainer;
 }
 
-
 export function createSortAndCount(context) {
     const sortCountContainer = document.createElement("div");
     sortCountContainer.className = "thb-filter-sort-count";
@@ -686,7 +685,6 @@ export function createSortAndCount(context) {
 
     return sortCountContainer;
 }
-
 
 export function createCollapsibleCheckboxFilter(context, tree, filter) {
     const placeholder = document.createElement("div");

@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.5] - 16-09-2025
+### Fixed
+- Don't show product image, title, sku or price if the item doesn't have it
+
 ## [1.3.4] - 15-09-2025
 ### Fixed
 - Make sure there is always url params available
